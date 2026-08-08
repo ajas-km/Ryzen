@@ -23,10 +23,14 @@ export function InterviewerApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] flex flex-col font-sans text-zinc-200">
-      {currentView !== "landing" && <Header />}
+    <div
+      className={`bg-[#09090b] flex flex-col font-sans text-zinc-200 ${
+        currentView === "chat" ? "h-dvh min-h-0 overflow-hidden" : "min-h-screen"
+      }`}
+    >
+      {currentView === "selection" && <Header />}
 
-      <main className="flex-1 flex flex-col relative w-full">
+      <main className="flex-1 min-h-0 flex flex-col relative w-full">
         {currentView === "landing" && <LandingView onStart={() => setCurrentView("selection")} />}
 
         {currentView === "selection" && <SelectionView onSelect={handleSelectCandidate} />}

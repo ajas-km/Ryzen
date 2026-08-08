@@ -1,86 +1,130 @@
+import { useEffect, useRef, useState } from "react"
 import {
   MessageSquare,
   AlertCircle,
   CheckCircle2,
   FileText,
   Calendar,
-  Maximize2,
-  MoreVertical,
-  ChevronRight,
-  Paperclip,
-  Mic,
+  PanelLeftClose,
+  PanelLeftOpen,
   Send,
 } from "lucide-react"
-import { CHAT_MESSAGES, type Candidate } from "./data"
+import { CHAT_MESSAGES, type Candidate, type ChatMessage } from "./data"
 
 export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: () => void }) {
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false)
+  const [messageText, setMessageText] = useState("")
+  const [messages, setMessages] = useState<ChatMessage[]>(CHAT_MESSAGES)
+  const [isPreparing, setIsPreparing] = useState(false)
+  const chatHistoryRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    chatHistoryRef.current?.scrollTo({
+      top: chatHistoryRef.current.scrollHeight,
+      behavior: "smooth",
+    })
+  }, [messages, isPreparing])
+
+  const handleSendMessage = () => {
+    const text = messageText.trim()
+
+    if (!text || isPreparing) return
+
+    const messageId = Date.now()
+    const time = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date())
+
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      { id: messageId, sender: "user", time, text },
+    ])
+    setMessageText("")
+    setIsPreparing(true)
+
+    window.setTimeout(() => {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: messageId + 1,
+          sender: "ai",
+          time: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
+          text: "Thank you for your response. Could you share a specific example that demonstrates how you handled this situation?",
+        },
+      ])
+      setIsPreparing(false)
+    }, 1500)
+  }
+
   return (
-    <div className="flex-1 flex overflow-hidden bg-slate-50 animate-in fade-in duration-300">
-      {/* Left Sidebar */}
-      <div className="w-72 bg-white border-r border-slate-200 flex flex-col overflow-y-auto">
-        <div className="p-5 border-b border-slate-200">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-[#09090b] animate-in fade-in duration-300 relative">
+      {/* Same radial glow as homepage */}
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] pointer-events-none" />
+
+      {/* Left Sidebar — sticky */}
+      {!isSidebarHidden && (
+      <div className="w-72 h-full bg-zinc-950/80 backdrop-blur-md border-r border-zinc-800 flex flex-col overflow-y-auto overscroll-contain z-10 shrink-0">
+        <div className="p-5 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
             <AlertCircle className="w-4 h-4" /> Active Session
           </div>
 
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-            <div className="text-xs text-slate-500 mb-1">Candidate</div>
+          <div className="bg-zinc-900/60 rounded-xl p-4 border border-zinc-800">
+            <div className="text-xs text-zinc-500 mb-1">Candidate</div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center text-white font-bold text-xs">
+              <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center text-zinc-200 font-bold text-xs">
                 {candidate.name.charAt(0)}
               </div>
-              <span className="font-bold text-slate-900">{candidate.name}</span>
+              <span className="font-bold text-zinc-100">{candidate.name}</span>
             </div>
 
-            <div className="text-xs text-slate-500 mb-1">Position</div>
-            <div className="font-medium text-sm text-slate-800 mb-4">{candidate.role}</div>
+            <div className="text-xs text-zinc-500 mb-1">Position</div>
+            <div className="font-medium text-sm text-zinc-300 mb-4">{candidate.role}</div>
 
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-slate-500">Session Progress</span>
-              <span className="font-bold text-blue-600">35%</span>
+              <span className="text-zinc-500">Session Progress</span>
+              <span className="font-bold text-zinc-200">35%</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-600 rounded-full w-[35%]" />
+            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-full bg-zinc-400 rounded-full w-[35%]" />
             </div>
           </div>
         </div>
 
-        <div className="p-5 border-b border-slate-200">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+        <div className="p-5 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
             <CheckCircle2 className="w-4 h-4" /> Evaluation Flow
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-sm text-slate-400">
-              <div className="w-5 h-5 rounded-full border-2 border-green-500 flex items-center justify-center text-green-500">
+            <div className="flex items-center gap-3 text-sm text-zinc-500">
+              <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-500">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               Introduction
             </div>
-            <div className="flex items-center gap-3 text-sm text-slate-400">
-              <div className="w-5 h-5 rounded-full border-2 border-green-500 flex items-center justify-center text-green-500">
+            <div className="flex items-center gap-3 text-sm text-zinc-500">
+              <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-500">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               Experience Review
             </div>
-            <div className="flex items-center gap-3 text-sm font-bold text-slate-900">
-              <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
+            <div className="flex items-center gap-3 text-sm font-bold text-zinc-100">
+              <div className="w-5 h-5 rounded-full bg-zinc-400 text-zinc-900 flex items-center justify-center text-xs">
                 3
               </div>
               Technical Competency
             </div>
-            <div className="flex items-center gap-3 text-sm text-slate-400">
-              <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs">
+            <div className="flex items-center gap-3 text-sm text-zinc-500">
+              <div className="w-5 h-5 rounded-full bg-zinc-800 text-zinc-500 flex items-center justify-center text-xs border border-zinc-700">
                 4
               </div>
               Problem Solving
             </div>
-            <div className="flex items-center gap-3 text-sm text-slate-400">
-              <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs">
+            <div className="flex items-center gap-3 text-sm text-zinc-500">
+              <div className="w-5 h-5 rounded-full bg-zinc-800 text-zinc-500 flex items-center justify-center text-xs border border-zinc-700">
                 5
               </div>
               Culture Fit
@@ -89,109 +133,75 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
         </div>
 
         <div className="p-5 flex-1">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
             <FileText className="w-4 h-4" /> Quick Resources
           </div>
           <div className="space-y-2">
-            <button className="w-full flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 p-2 rounded-md transition-colors text-left">
-              <FileText className="w-4 h-4 text-slate-400" /> Job Description.pdf
+            <button className="w-full flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 p-2 rounded-md transition-colors text-left">
+              <FileText className="w-4 h-4 text-zinc-500" /> Job Description.pdf
             </button>
-            <button className="w-full flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 p-2 rounded-md transition-colors text-left">
-              <FileText className="w-4 h-4 text-slate-400" /> Assessment Rubric.v2
+            <button className="w-full flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 p-2 rounded-md transition-colors text-left">
+              <FileText className="w-4 h-4 text-zinc-500" /> Assessment Rubric.v2
             </button>
-            <button className="w-full flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 p-2 rounded-md transition-colors text-left">
-              <Calendar className="w-4 h-4 text-slate-400" /> Past Interview Notes
+            <button className="w-full flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 p-2 rounded-md transition-colors text-left">
+              <Calendar className="w-4 h-4 text-zinc-500" /> Past Interview Notes
             </button>
           </div>
         </div>
 
-        <div className="p-4 m-4 bg-blue-50 rounded-xl border border-blue-100">
+        <div className="p-4 m-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
           <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
             <div>
-              <div className="text-xs font-bold text-slate-900 mb-1">Recruiter Tip</div>
-              <div className="text-xs text-slate-600 leading-relaxed">
+              <div className="text-xs font-bold text-zinc-200 mb-1">Recruiter Tip</div>
+              <div className="text-xs text-zinc-500 leading-relaxed">
                 AI is focusing on &quot;Scaling Complexity&quot;. Feel free to nudge if details are thin.
               </div>
             </div>
           </div>
         </div>
       </div>
+      )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white relative">
-        {/* Top Bar */}
-        <div className="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-white shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium border border-green-200">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Live Interview
-            </div>
-            <div className="h-4 w-px bg-slate-300" />
-            <div className="text-sm font-bold text-slate-900">Technical Competency</div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-            <div className="text-sm text-slate-500">Priority Management</div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="text-slate-400 hover:text-slate-600" aria-label="Maximize">
-              <Maximize2 className="w-4 h-4" />
-            </button>
-            <button className="text-slate-400 hover:text-slate-600" aria-label="More options">
-              <MoreVertical className="w-4 h-4" />
-            </button>
-            <button
-              onClick={onEnd}
-              className="bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium px-4 py-1.5 rounded-md transition-colors border border-red-200"
-            >
-              End Session
-            </button>
-          </div>
-        </div>
-
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col relative z-10">
+        <button
+          type="button"
+          onClick={() => setIsSidebarHidden((hidden) => !hidden)}
+          className="absolute top-4 left-4 z-30 p-2 rounded-lg bg-zinc-900/80 border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          aria-label={isSidebarHidden ? "Show menu" : "Hide menu"}
+          title={isSidebarHidden ? "Show menu" : "Hide menu"}
+        >
+          {isSidebarHidden ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+        </button>
         {/* Chat History */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
+        <div
+          ref={chatHistoryRef}
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-pb-64 p-6 pb-64 md:scroll-pb-72 md:p-10 md:pb-72"
+        >
           <div className="max-w-3xl mx-auto">
             {/* Session Header */}
             <div className="text-center mb-10">
-              <div className="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center relative border-4 border-white shadow-sm">
-                <MessageSquare className="w-8 h-8 text-blue-600" />
-                <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+              <div className="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-full mx-auto mb-4 flex items-center justify-center relative shadow-lg">
+                <MessageSquare className="w-8 h-8 text-zinc-400" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-zinc-950 rounded-full" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Technical Interview Session</h2>
-              <p className="text-slate-500 text-sm max-w-md mx-auto">
-                This session is being recorded and transcribed in real-time for assessment purposes. All data is
-                processed securely.
-              </p>
-
-              <div className="flex items-center justify-center gap-8 mt-6 text-xs">
-                <div className="text-center">
-                  <div className="text-slate-400 mb-1">Reliability</div>
-                  <div className="font-bold text-green-600">99.8%</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-slate-400 mb-1">Latency</div>
-                  <div className="font-bold text-blue-600">120ms</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-slate-400 mb-1">Security</div>
-                  <div className="font-bold text-blue-600">AES-256</div>
-                </div>
-              </div>
+              <h2 className="text-2xl font-bold text-zinc-100 mb-2">Technical Interview Session</h2>
             </div>
 
-            <div className="border-t border-slate-200 mb-8" />
+            <div className="border-t border-zinc-800 mb-8" />
 
             {/* Messages */}
             <div className="space-y-8">
-              {CHAT_MESSAGES.map((msg) => (
+              {messages.map((msg) => (
                 <div key={msg.id} className={`flex gap-4 ${msg.sender === "user" ? "flex-row-reverse" : ""}`}>
                   <div className="flex-shrink-0 mt-1">
                     {msg.sender === "ai" ? (
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <MessageSquare className="w-4 h-4 text-blue-600" />
+                      <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center">
+                        <MessageSquare className="w-4 h-4 text-zinc-400" />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                      <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center text-zinc-200 font-bold text-xs">
                         {candidate.name.charAt(0)}
                       </div>
                     )}
@@ -203,69 +213,88 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
                     <div
                       className={`flex items-center gap-2 mb-1.5 ${msg.sender === "user" ? "flex-row-reverse" : ""}`}
                     >
-                      <span className="text-xs font-bold text-slate-700">
+                      <span className="text-xs font-bold text-zinc-300">
                         {msg.sender === "ai" ? "AI Interviewer" : candidate.name}
                       </span>
-                      <span className="text-xs text-slate-400">{msg.time}</span>
+                      <span className="text-xs text-zinc-600">{msg.time}</span>
                     </div>
 
                     <div
                       className={`p-4 rounded-2xl text-sm leading-relaxed ${
                         msg.sender === "user"
-                          ? "bg-blue-600 text-white rounded-tr-sm"
-                          : "bg-slate-50 border border-slate-200 text-slate-800 rounded-tl-sm"
+                          ? "bg-zinc-800 text-zinc-100 rounded-tr-sm border border-zinc-700"
+                          : "bg-zinc-900/70 border border-zinc-800 text-zinc-300 rounded-tl-sm"
                       }`}
                     >
                       {msg.text}
 
                       {msg.attachment && (
-                        <div className="mt-3 bg-blue-700/50 rounded-lg p-3 flex items-center gap-3 border border-blue-500/30">
-                          <FileText className="w-5 h-5 text-blue-200" />
+                        <div className="mt-3 bg-zinc-800/80 rounded-lg p-3 flex items-center gap-3 border border-zinc-700">
+                          <FileText className="w-5 h-5 text-zinc-400" />
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-white">{msg.attachment}</div>
-                            <div className="text-xs text-blue-200">1.2 MB</div>
+                            <div className="text-sm font-medium text-zinc-200">{msg.attachment}</div>
+                            <div className="text-xs text-zinc-500">1.2 MB</div>
                           </div>
-                          <CheckCircle2 className="w-4 h-4 text-green-400" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               ))}
+              {isPreparing && (
+                <div className="flex gap-4" role="status">
+                  <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-zinc-400" />
+                  </div>
+                  <div className="bg-zinc-900/70 border border-zinc-800 text-zinc-400 rounded-2xl rounded-tl-sm px-4 py-3 text-sm animate-pulse">
+                    Your question is preparing...
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Input Area */}
-        <div className="p-6 bg-white border-t border-slate-200">
+        <div className="absolute inset-x-0 bottom-0 z-20 p-6 pt-16 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
           <div className="max-w-3xl mx-auto">
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                handleSendMessage()
+              }}
+              className="bg-zinc-900/60 border border-zinc-700 rounded-xl p-2 shadow-lg focus-within:ring-2 focus-within:ring-zinc-600 focus-within:border-zinc-600 transition-all"
+            >
               <textarea
                 placeholder="Type your detailed response here..."
-                className="w-full bg-transparent border-none focus:ring-0 resize-none p-3 text-sm text-slate-800 min-h-[80px]"
+                className="w-full bg-transparent border-none focus:ring-0 resize-none p-3 text-sm text-zinc-200 min-h-[80px] placeholder:text-zinc-600 focus:outline-none"
+                value={messageText}
+                onChange={(event) => setMessageText(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
               />
               <div className="flex items-center justify-between px-2 pb-2">
-                <div className="flex items-center gap-2">
-                  <button className="text-slate-500 hover:text-slate-700 p-1.5 rounded-md hover:bg-slate-200 flex items-center gap-1.5 text-xs font-medium transition-colors">
-                    <Paperclip className="w-4 h-4" /> Attach
-                  </button>
-                  <button className="text-slate-500 hover:text-slate-700 p-1.5 rounded-md hover:bg-slate-200 flex items-center gap-1.5 text-xs font-medium transition-colors">
-                    <Mic className="w-4 h-4" /> Voice
-                  </button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 hidden sm:inline-block">Press Enter to send</span>
-                  <button className="bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-500 transition-colors">
+                <div className="ml-auto">
+                  <button
+                    type="submit"
+                    disabled={!messageText.trim() || isPreparing}
+                    className="bg-zinc-100 hover:bg-white disabled:bg-zinc-700 disabled:text-zinc-400 disabled:cursor-not-allowed text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                  >
                     Send Response <Send className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-slate-400">
+            </form>
+            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-zinc-600">
               <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-green-500" /> Session Secured
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Session Secured
               </span>
-              <span className="text-slate-300">|</span>
+              <span className="text-zinc-700">|</span>
               <span>Standardized Protocol V4.2</span>
             </div>
           </div>
