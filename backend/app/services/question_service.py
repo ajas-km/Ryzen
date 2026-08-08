@@ -2,7 +2,7 @@ import random
 import os
 from dotenv import load_dotenv
 from google import genai
-
+from app.services.curriculum_service import get_topic_objectives
 # Load env
 load_dotenv()
 
@@ -29,18 +29,26 @@ def generate_question(analysis: dict, role: str = "Software Developer"):
         topic = random.choice(["Arrays", "OOP", "APIs", "Databases"])
         level = "easy"
 
+    # ✅ GET CURRICULUM OBJECTIVES
+    objectives = get_topic_objectives(topic)
+    objectives_text = "\n".join(objectives) if objectives else "No objectives"
+
     # Prompt
     prompt = f"""
     You are a technical interviewer.
 
-    Ask ONE {level}-level interview question for a {role} candidate.
+    Candidate Role: {role}
+    Difficulty: {level}
 
     Topic: {topic}
 
-    Rules:
-    - Do not give answer
-    - Keep it realistic
-    - Be clear and professional
+    Curriculum Objectives:
+    {objectives_text}
+
+    Ask ONE realistic interview question:
+    - Based on the curriculum objectives
+    - Scenario-based
+    - Do NOT give answer
     """
 
     # 🔥 NEW API CALL
