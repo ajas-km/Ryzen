@@ -43,6 +43,22 @@ export const CANDIDATES: Candidate[] = [
     matchScore: 78,
     date: "Oct 15, 2023",
   },
+  {
+    id: "CAN-5589",
+    name: "Aisha Patel",
+    role: "Backend Engineer",
+    status: "Qualified",
+    matchScore: 89,
+    date: "Oct 16, 2023",
+  },
+  {
+    id: "CAN-6621",
+    name: "James Wilson",
+    role: "Data Scientist",
+    status: "In Review",
+    matchScore: 82,
+    date: "Oct 17, 2023",
+  },
 ]
 
 export type ChatMessage = {

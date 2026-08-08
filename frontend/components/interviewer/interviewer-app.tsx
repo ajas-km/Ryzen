@@ -23,7 +23,7 @@ export function InterviewerApp() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-900">
+    <div className="min-h-screen bg-[#09090b] flex flex-col font-sans text-zinc-200">
       {currentView !== "landing" && <Header />}
 
       <main className="flex-1 flex flex-col relative w-full">
@@ -37,20 +37,20 @@ export function InterviewerApp() {
       </main>
 
       {currentView === "selection" && (
-        <footer className="bg-white border-t border-slate-200 py-6 px-8 mt-auto w-full">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div>© 2026 AI Interviewer Pro. All rights reserved.</div>
+        <footer className="bg-[#09090b] border-t border-zinc-800 py-6 px-8 mt-auto w-full">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
+            <div>© 2026 AI interPro. All rights reserved.</div>
             <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-slate-800 flex items-center gap-1.5">
+              <a href="#" className="hover:text-zinc-300 flex items-center gap-1.5">
                 <AlertCircle className="w-4 h-4" /> Help Center
               </a>
-              <a href="#" className="hover:text-slate-800 flex items-center gap-1.5">
+              <a href="#" className="hover:text-zinc-300 flex items-center gap-1.5">
                 <FileText className="w-4 h-4" /> Privacy Policy
               </a>
-              <a href="#" className="hover:text-slate-800 flex items-center gap-1.5">
+              <a href="#" className="hover:text-zinc-300 flex items-center gap-1.5">
                 <MessageSquare className="w-4 h-4" /> Contact Support
               </a>
-              <a href="#" className="hover:text-slate-800 flex items-center gap-1.5">
+              <a href="#" className="hover:text-zinc-300 flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" /> Platform Status
               </a>
             </div>
