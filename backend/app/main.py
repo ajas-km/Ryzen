@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from app.routes import interview
+
+# Load environment variables on startup
+load_dotenv()
 
 app = FastAPI(title="AI Interview Agent API")
 
-# Allow Frontend to communicate without CORS issues
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
