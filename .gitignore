@@ -1,0 +1,18 @@
+# Environment variables (SECURITY CRITICAL)
+.env
+*.env
+
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS Settings
+.vscode/
+.idea/
+.DS_Store

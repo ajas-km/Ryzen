@@ -39,7 +39,7 @@ async def handle_interview(request: InterviewRequest):
 
     except Exception as e:
         error_details = traceback.format_exc()
-        print(error_details) # This safely prints to your terminal
-        # Return a generic error to the frontend:
-        raise HTTPException(status_code=500, detail="Internal Server Error. Please try again.")
+        print(error_details)
+        # TEMPORARILY REVERT TO DEBUG MODE TO SEE THE CRASH:
+        raise HTTPException(status_code=500, detail=f"DEBUG ERROR:\n{error_details}")
     
