@@ -1,7 +1,7 @@
 from app.services.candidate_service import get_candidate_by_id, analyze_candidate
 from app.services.question_service import generate_question
 from app.services.evaluation_service import evaluate_answer
-
+from app.services.feedback_service import generate_feedback
 
 candidate = get_candidate_by_id("CAND-001")
 
@@ -31,3 +31,21 @@ q2 = generate_question(
 )
 
 print("Q2:", q2)
+
+
+history = [
+    {
+        "question": q1["question"],
+        "answer": answer,
+        "evaluation": eval_result["rating"]
+    },
+    {
+        "question": q2["question"],
+        "answer": "Another sample answer",
+        "evaluation": "good"
+    }
+]
+
+feedback = generate_feedback(history)
+
+print("Feedback:", feedback)
