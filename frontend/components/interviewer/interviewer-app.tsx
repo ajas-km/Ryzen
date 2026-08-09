@@ -6,6 +6,7 @@ import { Header } from "./header"
 import { LandingView } from "./landing-view"
 import { SelectionView } from "./selection-view"
 import { ChatView } from "./chat-view"
+import { ReportView } from "./report-view"
 import type { Candidate, ViewState } from "./data"
 
 export function InterviewerApp() {
@@ -36,7 +37,11 @@ export function InterviewerApp() {
         {currentView === "selection" && <SelectionView onSelect={handleSelectCandidate} />}
 
         {currentView === "chat" && selectedCandidate && (
-          <ChatView candidate={selectedCandidate} onEnd={handleEndSession} />
+          <ChatView candidate={selectedCandidate} onViewReport={() => setCurrentView("summary")} />
+        )}
+
+        {currentView === "summary" && selectedCandidate && (
+          <ReportView candidate={selectedCandidate} onBack={handleEndSession} />
         )}
       </main>
 

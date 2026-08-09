@@ -11,12 +11,14 @@ import {
 } from "lucide-react"
 import { CHAT_MESSAGES, type Candidate, type ChatMessage } from "./data"
 
-export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: () => void }) {
+export function ChatView({ candidate, onViewReport }: { candidate: Candidate; onViewReport: () => void }) {
   const [isSidebarHidden, setIsSidebarHidden] = useState(false)
   const [messageText, setMessageText] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>(CHAT_MESSAGES)
   const [isPreparing, setIsPreparing] = useState(false)
+  const [progress, setProgress] = useState(35)
   const chatHistoryRef = useRef<HTMLDivElement>(null)
+  const isComplete = progress === 100
 
   useEffect(() => {
     chatHistoryRef.current?.scrollTo({
@@ -28,28 +30,36 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
   const handleSendMessage = () => {
     const text = messageText.trim()
 
-    if (!text || isPreparing) return
+    if (!text || isPreparing || isComplete) return
 
     const messageId = Date.now()
     const time = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date())
+    const nextProgress = Math.min(100, progress + 22)
 
     setMessages((currentMessages) => [
       ...currentMessages,
       { id: messageId, sender: "user", time, text },
     ])
     setMessageText("")
+    setProgress(nextProgress)
     setIsPreparing(true)
 
     window.setTimeout(() => {
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        {
-          id: messageId + 1,
-          sender: "ai",
-          time: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
-          text: "Thank you for your response. Could you share a specific example that demonstrates how you handled this situation?",
-        },
-      ])
+      setMessages((currentMessages) => {
+        const response = nextProgress === 100
+          ? "All interview questions have been completed. Your interview report and feedback are now ready to review."
+          : "Thank you for your response. Could you share a specific example that demonstrates how you handled this situation?"
+
+        return [
+          ...currentMessages,
+          {
+            id: messageId + 1,
+            sender: "ai",
+            time: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
+            text: response,
+          },
+        ]
+      })
       setIsPreparing(false)
     }, 1500)
   }
@@ -81,10 +91,10 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
 
             <div className="flex items-center justify-between text-xs mb-1.5">
               <span className="text-zinc-500">Session Progress</span>
-              <span className="font-bold text-zinc-200">35%</span>
+              <span className="font-bold text-zinc-200">{progress}%</span>
             </div>
             <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <div className="h-full bg-zinc-400 rounded-full w-[35%]" />
+              <div className="h-full bg-zinc-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
         </div>
@@ -248,7 +258,7 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
                     <MessageSquare className="w-4 h-4 text-zinc-400" />
                   </div>
                   <div className="bg-zinc-900/70 border border-zinc-800 text-zinc-400 rounded-2xl rounded-tl-sm px-4 py-3 text-sm animate-pulse">
-                    Your question is preparing...
+                    {isComplete ? "Your interview report is preparing..." : "Your question is preparing..."}
                   </div>
                 </div>
               )}
@@ -259,6 +269,24 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
         {/* Input Area */}
         <div className="absolute inset-x-0 bottom-0 z-20 p-6 pt-16 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
           <div className="max-w-3xl mx-auto">
+            {isComplete ? (
+              <div className="rounded-xl border border-zinc-700 bg-zinc-900/90 p-5 text-center shadow-lg">
+                <CheckCircle2 className="w-6 h-6 mx-auto mb-2 text-emerald-400" />
+                <p className="font-semibold text-zinc-100">Interview complete</p>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {isPreparing ? "Finalizing your report..." : "Your report and feedback are ready to review."}
+                </p>
+                {!isPreparing && (
+                  <button
+                    type="button"
+                    onClick={onViewReport}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-white"
+                  >
+                    View report &amp; feedback
+                  </button>
+                )}
+              </div>
+            ) : (
             <form
               onSubmit={(event) => {
                 event.preventDefault()
@@ -290,6 +318,7 @@ export function ChatView({ candidate, onEnd }: { candidate: Candidate; onEnd: ()
                 </div>
               </div>
             </form>
+            )}
             <div className="flex items-center justify-center gap-4 mt-4 text-xs text-zinc-600">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Session Secured
