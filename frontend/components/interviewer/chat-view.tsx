@@ -4,16 +4,289 @@ import {
   AlertCircle,
   CheckCircle2,
   FileText,
-  Calendar,
   PanelLeftClose,
   PanelLeftOpen,
   Send,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Activity,
 } from "lucide-react"
 import type { Candidate, ChatMessage, BackendCandidate } from "./data"
 import type { FeedbackData } from "./interviewer-app"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
+/* ── helpers ─────────────────────────────────────────────────── */
+/** Map a rating to a numeric delta */
+function ratingToDelta(rating: string): number {
+  switch (rating) {
+    case "good":
+      return 20
+    case "average":
+      return 5
+    case "poor":
+      return -15
+    default:
+      return 0
+  }
+}
+
+/** Clamp a value between min and max */
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v))
+}
+
+/** Color for a score value */
+function scoreColor(score: number): string {
+  if (score >= 70) return "#22c55e" // green‑500
+  if (score >= 40) return "#eab308" // yellow‑500
+  return "#ef4444" // red‑500
+}
+
+/** Glow color matching the score band */
+function glowColor(score: number): string {
+  if (score >= 70) return "rgba(34,197,94,0.25)"
+  if (score >= 40) return "rgba(234,179,8,0.20)"
+  return "rgba(239,68,68,0.25)"
+}
+
+/* ── PerformanceMeter ─────────────────────────────────────── */
+function PerformanceMeter({
+  history,
+  ratings,
+}: {
+  history: number[]
+  ratings: string[]
+}) {
+  const W = 220
+  const H = 100
+  const PAD = 12
+
+  // Build polyline points from score history
+  const points: string[] = []
+  const n = history.length
+  if (n === 0) {
+    // empty state – flat line at 50
+    points.push(`${PAD},${H / 2}`, `${W - PAD},${H / 2}`)
+  } else if (n === 1) {
+    const y = PAD + ((100 - history[0]) / 100) * (H - PAD * 2)
+    points.push(`${PAD},${y}`, `${W - PAD},${y}`)
+  } else {
+    const step = (W - PAD * 2) / (n - 1)
+    history.forEach((score, i) => {
+      const x = PAD + i * step
+      const y = PAD + ((100 - score) / 100) * (H - PAD * 2)
+      points.push(`${x},${y}`)
+    })
+  }
+
+  const polyline = points.join(" ")
+  const currentScore = history.length > 0 ? history[history.length - 1] : 50
+  const lastRating = ratings.length > 0 ? ratings[ratings.length - 1] : null
+
+  // Gradient fill polygon (line → bottom)
+  const fillPoints =
+    n > 0
+      ? `${points.join(" ")} ${W - PAD},${H - PAD} ${PAD},${H - PAD}`
+      : `${PAD},${H / 2} ${W - PAD},${H / 2} ${W - PAD},${H - PAD} ${PAD},${H - PAD}`
+
+  const color = scoreColor(currentScore)
+  const glow = glowColor(currentScore)
+
+  return (
+    <div className="p-5 border-b border-zinc-800 flex-1 min-h-0 flex flex-col">
+      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
+        <Activity className="w-4 h-4" /> Live Performance
+      </div>
+
+      {/* Score display */}
+      <div className="flex items-end justify-between mb-3">
+        <div>
+          <div
+            className="text-3xl font-black tabular-nums transition-colors duration-500"
+            style={{ color }}
+          >
+            {currentScore}
+          </div>
+          <div className="text-[10px] text-zinc-500 font-medium mt-0.5">
+            / 100
+          </div>
+        </div>
+        {lastRating && (
+          <div
+            className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md transition-colors duration-300"
+            style={{
+              color,
+              backgroundColor: glow,
+            }}
+          >
+            {lastRating === "good" && (
+              <>
+                <TrendingUp className="w-3.5 h-3.5" /> Good
+              </>
+            )}
+            {lastRating === "average" && (
+              <>
+                <Minus className="w-3.5 h-3.5" /> Average
+              </>
+            )}
+            {lastRating === "poor" && (
+              <>
+                <TrendingDown className="w-3.5 h-3.5" /> Poor
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* SVG Chart */}
+      <div
+        className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 mb-3 transition-shadow duration-500"
+        style={{ boxShadow: `0 0 24px ${glow}` }}
+      >
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full"
+          style={{ height: 100 }}
+        >
+          <defs>
+            <linearGradient
+              id="perfFill"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Grid lines */}
+          {[25, 50, 75].map((v) => {
+            const y = PAD + ((100 - v) / 100) * (H - PAD * 2)
+            return (
+              <line
+                key={v}
+                x1={PAD}
+                y1={y}
+                x2={W - PAD}
+                y2={y}
+                stroke="rgba(113,113,122,0.15)"
+                strokeDasharray="4 4"
+              />
+            )
+          })}
+
+          {/* Gradient area */}
+          <polygon points={fillPoints} fill="url(#perfFill)" />
+
+          {/* Line */}
+          <polyline
+            points={polyline}
+            fill="none"
+            stroke={color}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#glow)"
+            className="transition-all duration-700"
+          />
+
+          {/* Data dots */}
+          {n > 1 &&
+            history.map((score, i) => {
+              const step = (W - PAD * 2) / (n - 1)
+              const cx = PAD + i * step
+              const cy = PAD + ((100 - score) / 100) * (H - PAD * 2)
+              return (
+                <circle
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={3}
+                  fill={scoreColor(score)}
+                  stroke="#09090b"
+                  strokeWidth={1.5}
+                />
+              )
+            })}
+        </svg>
+      </div>
+
+      {/* Rating dots timeline */}
+      {ratings.length > 0 && (
+        <div className="mt-auto">
+          <div className="text-[10px] text-zinc-600 mb-2 font-medium">
+            Answer History
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {ratings.map((r, i) => (
+              <div
+                key={i}
+                className="relative group"
+              >
+                <div
+                  className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-bold transition-transform hover:scale-125 cursor-default"
+                  style={{
+                    borderColor:
+                      r === "good"
+                        ? "#22c55e"
+                        : r === "average"
+                        ? "#eab308"
+                        : "#ef4444",
+                    backgroundColor:
+                      r === "good"
+                        ? "rgba(34,197,94,0.15)"
+                        : r === "average"
+                        ? "rgba(234,179,8,0.12)"
+                        : "rgba(239,68,68,0.15)",
+                    color:
+                      r === "good"
+                        ? "#4ade80"
+                        : r === "average"
+                        ? "#facc15"
+                        : "#f87171",
+                  }}
+                >
+                  {i + 1}
+                </div>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[9px] text-zinc-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  Q{i + 1}: {r}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {ratings.length === 0 && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Activity className="w-6 h-6 text-zinc-700 mx-auto mb-2" />
+            <p className="text-[11px] text-zinc-600">
+              Performance data will appear
+              <br />
+              after the first answer
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── ChatView ────────────────────────────────────────────────── */
 export function ChatView({
   candidate,
   sessionId,
@@ -35,6 +308,8 @@ export function ChatView({
   const [questionCount, setQuestionCount] = useState(0)
   const [totalQuestions, setTotalQuestions] = useState(12)
   const [error, setError] = useState<string | null>(null)
+  const [performanceHistory, setPerformanceHistory] = useState<number[]>([])
+  const [ratingHistory, setRatingHistory] = useState<string[]>([])
   const chatHistoryRef = useRef<HTMLDivElement>(null)
   const hasStarted = useRef(false)
 
@@ -47,6 +322,17 @@ export function ChatView({
       behavior: "smooth",
     })
   }, [messages, isPreparing])
+
+  // Process an evaluation rating from the API
+  const processEvaluation = useCallback((evaluation: string | null | undefined) => {
+    if (!evaluation || !["good", "average", "poor"].includes(evaluation)) return
+    const delta = ratingToDelta(evaluation)
+    setPerformanceHistory((prev) => {
+      const lastScore = prev.length > 0 ? prev[prev.length - 1] : 50
+      return [...prev, clamp(lastScore + delta, 0, 100)]
+    })
+    setRatingHistory((prev) => [...prev, evaluation])
+  }, [])
 
   // Start interview on mount
   const startInterview = useCallback(async () => {
@@ -136,6 +422,11 @@ export function ChatView({
       if (data.totalQuestions) setTotalQuestions(data.totalQuestions)
       if (data.questionCount != null) setQuestionCount(data.questionCount)
 
+      // Process evaluation for the performance meter
+      if (data.evaluation) {
+        processEvaluation(data.evaluation)
+      }
+
       // Check if interview is done
       if (data.done && data.feedback) {
         setIsComplete(true)
@@ -183,66 +474,10 @@ export function ChatView({
           </div>
         </div>
 
-        <div className="p-5 border-b border-zinc-800">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
-            <CheckCircle2 className="w-4 h-4" /> Evaluation Flow
-          </div>
+        {/* ── Live Performance Meter (replaces Evaluation Flow + Quick Resources) ── */}
+        <PerformanceMeter history={performanceHistory} ratings={ratingHistory} />
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 text-sm text-zinc-500">
-              <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-500">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              Introduction
-            </div>
-            <div className="flex items-center gap-3 text-sm text-zinc-500">
-              <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-500">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              Experience Review
-            </div>
-            <div className="flex items-center gap-3 text-sm font-bold text-zinc-100">
-              <div className="w-5 h-5 rounded-full bg-zinc-400 text-zinc-900 flex items-center justify-center text-xs">
-                3
-              </div>
-              Technical Competency
-            </div>
-            <div className="flex items-center gap-3 text-sm text-zinc-500">
-              <div className="w-5 h-5 rounded-full bg-zinc-800 text-zinc-500 flex items-center justify-center text-xs border border-zinc-700">
-                4
-              </div>
-              Problem Solving
-            </div>
-            <div className="flex items-center gap-3 text-sm text-zinc-500">
-              <div className="w-5 h-5 rounded-full bg-zinc-800 text-zinc-500 flex items-center justify-center text-xs border border-zinc-700">
-                5
-              </div>
-              Culture Fit
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 flex-1">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
-            <FileText className="w-4 h-4" /> Quick Resources
-          </div>
-          <div className="space-y-2">
-            <button className="w-full flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 p-2 rounded-md transition-colors text-left">
-              <FileText className="w-4 h-4 text-zinc-500" /> Job Description.pdf
-            </button>
-            <button className="w-full flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 p-2 rounded-md transition-colors text-left">
-              <FileText className="w-4 h-4 text-zinc-500" /> Assessment Rubric.v2
-            </button>
-            <button className="w-full flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 p-2 rounded-md transition-colors text-left">
-              <Calendar className="w-4 h-4 text-zinc-500" /> Past Interview Notes
-            </button>
-          </div>
-        </div>
-
+        {/* ── Recruiter Tip (kept as-is) ── */}
         <div className="p-4 m-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
