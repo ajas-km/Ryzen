@@ -1,0 +1,64 @@
+code x
+
+the menu bar should not be scrolled.it should be static.And the text box should be overplacesd above the chat.the chat is only thing should be scrolled.Updated the chat layout so only the message history scrolls.
+
+- Menu/sidebar and text composer remain fixed.
+- Chat view is constrained to the viewport.
+- Production build passes.
+
+Changed [interviewer-app.tsx](D:/hack/Ryzen/frontend/components/interviewer/interviewer-app.tsx) and [chat-view.tsx](D:/hack/Ryzen/frontend/components/interviewer/chat-view.tsx).
+
+make the menue bar and chat section scroll in separate .when user try to scroll menue bar ,the menue bar only be scrolled and in the case of chats same as menue bar (only chats can scroll).And only the text box should be stable .The text only overlaped above the chats.just like the chatgpt text box.
+
+Updated the layout:
+
+- Sidebar/menu scrolls independently.
+- Chat messages scroll independently.
+- The text box stays fixed as an overlay at the bottom of the chat, with a fade behind it like ChatGPT.
+- TypeScript check passes.
+
+Refresh your [local preview](http://localhost:3000) to see it.
+
+remove the attachment ,voice sessions from text box.remove the content below the heading "**Technical Interview Session" (also then reliability ,latency and security sessions).remove the text "**Press Enter to send' left of the ssend button.
+
+Removed the requested UI elements:
+
+- Attachment and Voice controls
+- Description and Reliability/Latency/Security metrics under the title
+- “Press Enter to send” hint
+
+The send button remains right-aligned. TypeScript check passes.
+
+make an option for hiding the menue bar just like the chatgpt classic.And make that if the user input and send the message it shoes as message.And when the prepare (or loading) the question that time show that "your question is preparing" just like in the chatgpt.
+
+Implemented the chat interactions:
+
+- Added a ChatGPT-style button to hide/show the sidebar menu.
+- Submitted text now appears immediately as a user message.
+- Displays “Your question is preparing…” while loading.
+- Adds a follow-up AI question after preparation completes.
+- Send button is disabled while empty or preparing.
+
+TypeScript validation passes. Refresh [the preview](http://localhost:3000) to try it.
+
+when user send an messag the chat automatically scroll up.i mean just like whatsapp messaging style.the latest sending message not to be placed below the text box.
+
+Updated the automatic scroll behavior. After a message is sent or the next question loads, the chat scrolls to the bottom with enough space for the newest message to remain visible above the fixed text box—WhatsApp-style.
+
+TypeScript check passes.
+
+when the user press the "enter"button in the keyboard.the message should be send.
+
+Enter now sends the message. Shift+Enter adds a new line. TypeScript check passes.
+
+when the questions from the backend ends.in otherwords when the progress bar in the left top hits 100% .the text box disappear and an button will be shown. when the user click that button open another page which is for report and feedback.refer the image i provided.The overall colur andd total theme should be same as previous pages.
+
+Implemented the completion and report flow.
+
+- Progress advances from 35% to 100% as answers are submitted.
+- At 100%, the text box is replaced with an interview-complete panel.
+- “View report & feedback” opens a new dark-themed report page with score, competency breakdown, strengths, improvement areas, and AI feedback.
+- The mock interview completes after three additional submitted answers. When a backend is connected, its completion status can replace this demo progress trigger.
+
+Added [report-view.tsx](D:/hack/Ryzen/frontend/components/interviewer/report-view.tsx) and updated the chat/app flow. TypeScript check passes.
+

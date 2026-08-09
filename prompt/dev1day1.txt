@@ -1,0 +1,2338 @@
+You are Backend Developer 1 for an AI Interview Agent system.
+
+
+
+# 🔥 PROJECT OVERVIEW
+
+
+
+We are building an AI-powered interview system with a single API:
+
+
+
+POST /api/interview
+
+
+
+The system:
+
+- Starts interview using candidate data
+
+- Continues conversation turn by turn
+
+- Evaluates answers
+
+- Ends with structured feedback
+
+
+
+IMPORTANT:
+
+- No authentication
+
+- No database (use in-memory session)
+
+- Fully conversational
+
+- Uses sessionId to track state
+
+
+
+---
+
+
+
+# 🧠 YOUR ROLE (VERY IMPORTANT)
+
+
+
+You are responsible for:
+
+👉 API + Interview Flow + Session Management
+
+
+
+You are the CONTROL BRAIN of the system.
+
+
+
+---
+
+
+
+# 📁 BACKEND STRUCTURE
+
+
+
+backend/
+
+│
+
+├── app/
+
+│   ├── main.py
+
+│   ├── routes/
+
+│   │   └── interview.py          ← YOU
+
+│   │
+
+│   ├── services/
+
+│   │   ├── interview_service.py  ← YOU
+
+│   │   ├── session_service.py    ← YOU
+
+│   │
+
+│   │   ├── candidate_service.py  ← OTHER DEV
+
+│   │   ├── question_service.py   ← OTHER DEV
+
+│   │   ├── evaluation_service.py ← OTHER DEV
+
+│   │   └── feedback_service.py   ← OTHER DEV
+
+│   │
+
+│   ├── models/
+
+│   │   └── schemas.py            ← YOU CREATE FIRST
+
+│   │
+
+│   └── data/
+
+│       ├── candidates.json
+
+│       └── curriculum.json
+
+
+
+---
+
+
+
+# 🧩 YOUR TASKS
+
+
+
+## 1. Create API Endpoint
+
+POST /api/interview
+
+
+
+Handle:
+
+- Start interview
+
+- Continue conversation
+
+- End interview
+
+
+
+---
+
+
+
+## 2. Session Management
+
+
+
+Store per session:
+
+- sessionId
+
+- candidateId
+
+- question_count
+
+- conversation history
+
+- current topic
+
+
+
+Use in-memory dictionary
+
+
+
+---
+
+
+
+## 3. Interview Flow Logic
+
+
+
+Flow:
+
+
+
+Start:
+
+- Extract candidateId
+
+- Call candidate_service (from Dev 2)
+
+- Store session
+
+- Ask first question
+
+
+
+Continue:
+
+- Get session
+
+- Evaluate answer (Dev 2)
+
+- Get next question (Dev 2)
+
+
+
+End:
+
+- After 5–7 questions
+
+- Generate feedback (Dev 2)
+
+
+
+---
+
+
+
+## 4. Response Format (STRICT)
+
+
+
+Always return:
+
+
+
+{
+
+  "reply": "...",
+
+  "done": false
+
+}
+
+
+
+Final:
+
+
+
+{
+
+  "reply": "Interview completed.",
+
+  "done": true,
+
+  "feedback": {
+
+    "summary": "...",
+
+    "strengths": [],
+
+    "gaps": [],
+
+    "next": []
+
+  }
+
+}
+
+
+
+---
+
+
+
+# ⚠️ IMPORTANT RULES
+
+
+
+- DO NOT write AI logic
+
+- DO NOT modify Dev 2 files
+
+- ONLY call their functions
+
+
+
+---
+
+
+
+# 🔗 FUNCTIONS YOU WILL USE
+
+
+
+get_candidate_by_id(id)
+
+analyze_candidate(data)
+
+generate_question(topic, level)
+
+evaluate_answer(question, answer)
+
+generate_feedback(history)
+
+
+
+---
+
+
+
+# 🎯 YOUR GOAL
+
+
+
+Build a clean, working interview engine controller.
+
+
+
+You control the flow. Dev 2 provides intelligence.
+
+
+
+---
+
+
+
+# 🚀 DEVELOPMENT APPROACH (VERY IMPORTANT)
+
+
+
+Do NOT build everything at once.
+
+
+
+Work step-by-step:
+
+
+
+Step 1: Create basic API endpoint (no logic)  
+
+Step 2: Add session handling  
+
+Step 3: Add start interview flow  
+
+Step 4: Add continue flow  
+
+Step 5: Add end + feedback  
+
+
+
+After EACH step:
+
+👉 Test it  
+
+👉 Get approval  
+
+👉 Then move to next step  
+
+
+
+Follow incremental development strictly.
+
+
+
+the above instructed is the my work tor part to be done
+
+my second teammate will perform the 2nd task
+
+You are Backend Developer 2 for an AI Interview Agent system.
+
+
+
+# 🔥 PROJECT OVERVIEW
+
+
+
+We are building an AI-powered interview system using:
+
+
+
+POST /api/interview
+
+
+
+The system:
+
+- Asks technical questions
+
+- Evaluates answers
+
+- Adapts difficulty
+
+- Gives structured feedback
+
+
+
+---
+
+
+
+# 🧠 YOUR ROLE (VERY IMPORTANT)
+
+
+
+You are responsible for:
+
+👉 AI + Candidate Analysis + Question Intelligence
+
+
+
+You are the INTELLIGENCE BRAIN of the system.
+
+
+
+---
+
+
+
+# 📁 BACKEND STRUCTURE
+
+
+
+backend/
+
+│
+
+├── app/
+
+│   ├── services/
+
+│   │   ├── candidate_service.py  ← YOU
+
+│   │   ├── question_service.py   ← YOU
+
+│   │   ├── evaluation_service.py ← YOU
+
+│   │   └── feedback_service.py   ← YOU
+
+│   │
+
+│   ├── utils/
+
+│   │   └── helpers.py            ← YOU
+
+│   │
+
+│   └── data/
+
+│       ├── candidates.json
+
+│       └── curriculum.json
+
+
+
+---
+
+
+
+# 🧩 YOUR TASKS
+
+
+
+## 1. Candidate Analysis
+
+
+
+From candidates.json extract:
+
+- weak topics
+
+- strong topics
+
+- skipped topics
+
+
+
+---
+
+
+
+## 2. Question Generation (LLM)
+
+
+
+Prompt:
+
+
+
+"Ask a technical interview question on [TOPIC] for [LEVEL]"
+
+
+
+---
+
+
+
+## 3. Answer Evaluation (LLM)
+
+
+
+Prompt:
+
+
+
+"Classify answer as good / average / poor and explain briefly"
+
+
+
+---
+
+
+
+## 4. Feedback Generation (LLM)
+
+
+
+Return:
+
+
+
+{
+
+  "summary": "...",
+
+  "strengths": [],
+
+  "gaps": [],
+
+  "next": []
+
+}
+
+
+
+---
+
+
+
+## 5. Difficulty Logic
+
+
+
+- good → harder
+
+- poor → easier
+
+
+
+---
+
+
+
+# 🔗 FUNCTIONS YOU MUST IMPLEMENT
+
+
+
+get_candidate_by_id(id)
+
+
+
+analyze_candidate(candidate_data)
+
+
+
+generate_question(topic, level)
+
+
+
+evaluate_answer(question, answer)
+
+
+
+generate_feedback(history)
+
+
+
+---
+
+
+
+# ⚠️ IMPORTANT RULES
+
+
+
+- DO NOT create API routes
+
+- DO NOT manage sessions
+
+- ONLY focus on logic + AI
+
+
+
+---
+
+
+
+# 🎯 YOUR GOAL
+
+
+
+Make the system smart, adaptive, and realistic.
+
+
+
+---
+
+
+
+# 🚀 DEVELOPMENT APPROACH (VERY IMPORTANT)
+
+
+
+Do NOT build everything at once.
+
+
+
+Work step-by-step:
+
+
+
+Step 1: Load and return candidate data  
+
+Step 2: Implement candidate analysis  
+
+Step 3: Create mock question generator (no LLM)  
+
+Step 4: Add real LLM for questions  
+
+Step 5: Add evaluation logic  
+
+Step 6: Add feedback generation  
+
+
+
+After EACH step:
+
+👉 Test it  
+
+👉 Get approval  
+
+👉 Then move to next step  
+
+
+
+Follow incremental development strictly.
+
+
+
+my third member will do the following
+
+You are the Frontend Developer for an AI Interview Agent system.
+
+
+
+# 🔥 PROJECT OVERVIEW
+
+
+
+We are building a chat-based AI interview system.
+
+
+
+Backend API:
+
+POST /api/interview
+
+
+
+---
+
+
+
+# 🧠 YOUR ROLE
+
+
+
+You are responsible for:
+
+👉 UI + User Experience + API Integration
+
+
+
+You are the FACE of the product.
+
+
+
+---
+
+
+
+# 🧩 FEATURES YOU MUST BUILD
+
+
+
+## 1. Candidate Selection
+
+
+
+- Dropdown or cards
+
+- Select candidate
+
+
+
+---
+
+
+
+## 2. Chat Interface
+
+
+
+- Show AI question
+
+- Input box for answer
+
+- Send button
+
+
+
+---
+
+
+
+## 3. API Integration
+
+
+
+Call:
+
+
+
+POST /api/interview
+
+
+
+Requests:
+
+
+
+Start:
+
+{
+
+  "sessionId": "abc",
+
+  "candidate": { "member": { "id": "CAND-001" } }
+
+}
+
+
+
+Continue:
+
+{
+
+  "sessionId": "abc",
+
+  "message": "..."
+
+}
+
+
+
+---
+
+
+
+## 4. Session Handling
+
+
+
+- Generate sessionId
+
+- Keep same sessionId
+
+
+
+---
+
+
+
+## 5. Display Feedback
+
+
+
+Show:
+
+- Summary
+
+- Strengths
+
+- Gaps
+
+- Next steps
+
+
+
+---
+
+
+
+# 🎯 UI GOAL
+
+
+
+- Clean chat UI
+
+- Smooth experience
+
+- Easy to understand
+
+
+
+---
+
+
+
+# ⚠️ IMPORTANT
+
+
+
+- Do NOT build backend
+
+- Focus on user experience
+
+- Handle API responses properly
+
+
+
+---
+
+
+
+# 🚀 BONUS
+
+
+
+Add:
+
+- Typing animation
+
+- Clean design
+
+
+
+---
+
+
+
+# 🎯 FINAL GOAL
+
+
+
+Make the product look professional and easy to use.
+
+
+
+---
+
+
+
+# 🚀 DEVELOPMENT APPROACH (VERY IMPORTANT)
+
+
+
+Do NOT build everything at once.
+
+
+
+Work step-by-step:
+
+
+
+Step 1: Create basic UI layout  
+
+Step 2: Add candidate selection  
+
+Step 3: Add chat UI (static)  
+
+Step 4: Connect API (start only)  
+
+Step 5: Add conversation flow  
+
+Step 6: Add feedback UI  
+
+
+
+After EACH step:
+
+👉 Test it  
+
+👉 Get approval  
+
+👉 Then move to next step  
+
+
+
+Follow incremental development strictly.
+
+
+
+this is the working of three member and the below is the problem statement and now begin my approach and work
+
+he Interview Agent
+
+Build the interviewer, not the interview.
+
+
+
+The Situation
+
+The AI Cohort is a 31-day enterprise AI engineering program covering modern AI topics including:
+
+Retrieval-Augmented Generation (RAG)
+
+Vector Databases
+
+Prompt Engineering
+
+Agentic AI
+
+Model Context Protocol (MCP)
+
+AI Deployment
+
+Production AI Systems
+
+After completing the cohort, learners should be able to confidently explain the systems they built and the engineering decisions behind them.
+
+However, preparing for technical interviews and effectively communicating this knowledge remains one of the biggest challenges.
+
+Your task is to build an AI Interview Agent that conducts personalized technical interviews based on a candidate's learning journey throughout the cohort.
+
+Your Challenge
+
+Design and build an AI agent capable of conducting a realistic, multi-turn technical interview.
+
+The interview should:
+
+Assess the candidate's understanding of the concepts they have completed.
+
+Adapt naturally throughout the conversation.
+
+Ask intelligent follow-up questions.
+
+Maintain context across the interview.
+
+Provide actionable feedback at the end.
+
+The overall experience should resemble a real technical interview rather than a scripted questionnaire.
+
+What You're Given
+
+Every team will receive the following resources:
+
+1. Curriculum
+
+A structured JSON containing the complete 31-day AI Cohort curriculum, including:
+
+Modules
+
+Daily topics
+
+Learning objectives
+
+Tools used throughout the program
+
+2. Candidate Profiles
+
+A collection of candidate profiles describing each participant's progress through the cohort, including:
+
+Completed missions
+
+Attempts
+
+Skipped topics
+
+Learning signals
+
+3. Technical Specification
+
+A separate document defining:
+
+Required API contract
+
+Submission requirements
+
+Request/response formats
+
+Minimum Requirements
+
+Your solution must:
+
+Conduct a conversational technical interview.
+
+Ask a minimum of 8 questions covering at least 4 different curriculum days.
+
+Generate follow-up questions based on previous responses.
+
+Maintain conversation context throughout the interview.
+
+Produce structured feedback at the end of the interview.
+
+Expose the required HTTP endpoint defined in the Technical Specification.
+
+You are free to choose any:
+
+AI models
+
+Frameworks
+
+Agent orchestration strategy
+
+Retrieval pipeline
+
+System architecture
+
+Out of Scope
+
+The following are not required:
+
+Voice interaction
+
+User authentication
+
+Persistent user accounts
+
+Long-term conversation history
+
+Mobile applications
+
+Notes
+
+All curriculum and candidate data provided for this challenge are synthetic and intended solely for the hackathon.
+
+Teams may use any AI models, agent frameworks, vector databases, or supporting technologies.
+
+Creativity in interview flow, reasoning, interaction design, and overall user experience is highly encouraged.
+
+Attached Resources
+
+Curriculum JSON
+
+Candidate Profiles
+
+Technical Specification
+
+
+
+i am also working with the github collaboration with my friend in with my new backend branch so i also need to update to it
+
+
+
+so lets begin my work showcase my approach and initiate the code sequences in which the work of other two doesnt conflict with my work 
+
+Welcome to the Control Brain of the AI Interview Agent! As Backend Developer 1, your role is crucial. You are the orchestrator ensuring the frontend has a stable API to call and Dev 2's AI logic is triggered at the exactly right moments.
+
+Since you are working in a GitHub collaboration, establishing strict boundaries right now is the best way to avoid merge conflicts and blocked workflows.
+
+Here is your architecture strategy and the execution of Step 1.
+
+🌿 GitHub Collaboration Strategy
+To ensure zero conflicts with Dev 2 and the Frontend Dev, follow these rules:
+
+Branching: Work exclusively on your branch (e.g., git checkout -b feature/interview-controller).
+
+File Boundaries:
+
+YOU OWN: app/main.py, app/routes/interview.py, app/services/session_service.py, and app/models/schemas.py.
+
+DEV 2 OWNS: app/services/candidate_service.py, app/services/question_service.py, etc.
+
+Mocking: Since Dev 2 is building their logic concurrently, you will use mock functions in your controller. This allows you to test your flow immediately. When Dev 2 merges their code, you just swap the imports.
+
+🛠️ Step 1: Basic API Endpoint & Schemas
+Let's set up the core FastAPI application, define the strict request/response schemas, and create a dummy endpoint to ensure the frontend can start connecting immediately.
+
+1. Define the API Schemas
+First, we establish the exact API contract so the Frontend Dev knows what to send and expect.
+
+File: backend/app/models/schemas.py
+
+Python
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+
+class CandidateMember(BaseModel):
+    id: str
+
+class CandidateDetail(BaseModel):
+    member: CandidateMember
+
+class InterviewRequest(BaseModel):
+    sessionId: str
+    candidate: Optional[CandidateDetail] = None
+    message: Optional[str] = None
+
+class FeedbackFeedback(BaseModel):
+    summary: str
+    strengths: List[str]
+    gaps: List[str]
+    next: List[str]
+
+class InterviewResponse(BaseModel):
+    reply: str
+    done: bool
+    feedback: Optional[FeedbackFeedback] = None
+2. Create the Router
+Next, we set up the single /api/interview endpoint with a placeholder response.
+
+File: backend/app/routes/interview.py
+
+Python
+from fastapi import APIRouter
+from app.models.schemas import InterviewRequest, InterviewResponse
+
+router = APIRouter()
+
+@router.post("/api/interview", response_model=InterviewResponse)
+async def handle_interview(request: InterviewRequest):
+    """
+    Step 1: Dummy endpoint. 
+    Later, this will orchestrate session checking, AI evaluation, and question generation.
+    """
+    
+    # Temporary static response to unblock the Frontend Developer
+    return InterviewResponse(
+        reply="Backend Dev 1 API is alive! Send me a message and I will echo it back soon.",
+        done=False
+    )
+3. Wire Up the Main App
+Finally, we tie it together so the server can run.
+
+File: backend/app/main.py
+
+Python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routes import interview
+
+app = FastAPI(title="AI Interview Agent API")
+
+# Allow Frontend to communicate without CORS issues
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(interview.router)
+
+@app.get("/")
+def health_check():
+    return {"status": "Control Brain is running."}
+Your Next Action:
+Commit and push these three files to your branch.
+
+Run your server locally (uvicorn app.main:app --reload) and test it with a simple POST request (via Postman, cURL, or Swagger UI at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)).
+
+Ready for Step 2?
+
+Yes
+yes
+
+Excellent. Now we build your memory. As the Control Brain, you need to know exactly who you are talking to, how many questions have been asked, and what has been said so far.
+
+Since you are strictly using an in-memory session (no databases), we will use a Python dictionary to store this state securely in memory while the server runs.
+
+Here is the execution for Step 2.
+
+1. Create the Session Service
+This file will handle all the Create, Read, and Update operations for our sessions. By isolating this here, Dev 2 can easily read the conversation_history later without messing with your API routes.
+
+File: backend/app/services/session_service.py
+
+Python
+from typing import Dict, Any, List
+
+# In-memory dictionary to store active interview sessions
+# Structure: { "session_id": { "candidate_id": "...", "question_count": 0, ... } }
+_sessions_db: Dict[str, Dict[str, Any]] = {}
+
+def create_session(session_id: str, candidate_id: str) -> Dict[str, Any]:
+    """Initializes a new interview session."""
+    _sessions_db[session_id] = {
+        "session_id": session_id,
+        "candidate_id": candidate_id,
+        "question_count": 0,
+        "conversation_history": [],
+        "current_topic": None
+    }
+    return _sessions_db[session_id]
+
+def get_session(session_id: str) -> Dict[str, Any]:
+    """Retrieves an existing session by ID."""
+    return _sessions_db.get(session_id)
+
+def update_session_history(session_id: str, role: str, content: str):
+    """Appends a message to the conversation history (role: 'user' or 'system')."""
+    session = get_session(session_id)
+    if session:
+        session["conversation_history"].append({"role": role, "content": content})
+
+def increment_question_count(session_id: str):
+    """Increments the number of questions asked so far."""
+    session = get_session(session_id)
+    if session:
+        session["question_count"] += 1
+
+def update_current_topic(session_id: str, topic: str):
+    """Updates the topic currently being evaluated."""
+    session = get_session(session_id)
+    if session:
+        session["current_topic"] = topic
+2. Update the API Route to Use Sessions
+Now we update your router. It needs to intelligently distinguish between a Start Request (which contains candidate data) and a Continue Request (which contains a message from the candidate).
+
+File: backend/app/routes/interview.py (Update this file)
+
+Python
+from fastapi import APIRouter, HTTPException
+from app.models.schemas import InterviewRequest, InterviewResponse
+from app.services import session_service
+
+router = APIRouter()
+
+@router.post("/api/interview", response_model=InterviewResponse)
+async def handle_interview(request: InterviewRequest):
+    session_id = request.sessionId
+    session = session_service.get_session(session_id)
+
+    # ---------------------------------------------------------
+    # FLOW 1: START INTERVIEW (Has candidate details)
+    # ---------------------------------------------------------
+    if request.candidate and request.candidate.member and request.candidate.member.id:
+        candidate_id = request.candidate.member.id
+        
+        # Initialize the session in memory
+        session = session_service.create_session(session_id, candidate_id)
+        
+        # MOCK: In Step 3, Dev 2's logic will generate the actual first question here.
+        reply = f"[System: Session {session_id} started for Candidate {candidate_id}. Awaiting first question logic.]"
+        
+        # Store system output in history
+        session_service.update_session_history(session_id, "system", reply)
+        
+        return InterviewResponse(reply=reply, done=False)
+
+    # ---------------------------------------------------------
+    # FLOW 2: CONTINUE INTERVIEW (Has a message)
+    # ---------------------------------------------------------
+    elif request.message:
+        # Prevent continuing a non-existent session
+        if not session:
+            raise HTTPException(status_code=400, detail="Session not found. Please start the interview first.")
+            
+        # Store user input in history
+        session_service.update_session_history(session_id, "user", request.message)
+        
+        # MOCK: In Step 4, Dev 2's logic will evaluate the answer and generate the next question here.
+        reply = f"[System: Message received. Stored in history. Question count: {session['question_count']}]"
+        
+        # Store system output in history
+        session_service.update_session_history(session_id, "system", reply)
+        
+        return InterviewResponse(reply=reply, done=False)
+
+    # ---------------------------------------------------------
+    # ERROR HANDLING
+    # ---------------------------------------------------------
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid request payload. Must provide 'candidate' to start, or 'message' to continue."
+        )
+How to Test This Step:
+You can test the flow using a tool like Postman or the FastAPI docs ([http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)).
+
+Test 1 (Start):
+Send { "sessionId": "12345", "candidate": { "member": { "id": "CAND-001" } } }.
+Expected: It creates the session and responds with a success message.
+
+Test 2 (Continue):
+Send { "sessionId": "12345", "message": "I know a lot about Vector Databases!" }.
+Expected: It finds the session, stores the message, and echoes back the current state.
+
+Ready for Step 3?
+
+Yes
+does i need to have these files in the backend folder as i am the main backend connectivity logic ,or does it should be maintained by the LLM unit member
+
+Great question. Since you and Dev 2 are collaborating on the same Git repository, these JSON files should be placed in the shared backend/app/data/ folder, but your responsibilities regarding them are very different.
+
+Here is exactly how the ownership breaks down:
+
+📁 Where the Files Go
+You should create the directory and add the files so the repository structure is complete.
+
+Plaintext
+backend/
+└── app/
+    └── data/
+        ├── candidates.json
+        └── curriculum.json
+🧠 Who Handles the Logic?
+Dev 2 (The LLM Unit) owns the logic for these files:
+
+Curriculum Parsing: Dev 2 needs the curriculum file to extract the 31 days and 8 modules of the program. They will use this to generate context-aware questions.  
+JSON
+
+Candidate Analysis: Dev 2 will read the candidate data to evaluate which specific missions a candidate has passed, failed, or skipped.  
+JSON
+
+Dev 2 is responsible for building functions like analyze_candidate(data) and get_candidate_by_id(id).
+
+You (The Control Brain) act as the middleman:
+
+The API Contract: Your POST /api/interview endpoint will receive the candidate's profile data from the frontend during the first request that initializes a new interview session.  
+MD
+
+Routing Data: You simply take that incoming payload and hand it over to Dev 2's functions. You don't need to write any code that directly opens, parses, or searches through candidates.json or curriculum.json.
+
+In short: You host the files in your shared repo, but Dev 2 writes the code to read them.
+
+Ready for Step 3?
+
+Yes
+provide the step 3 and the checking
+
+Now we move to Step 3: Add Start Interview Flow.
+
+In this step, we hook up the candidate payload to Dev 2’s candidate analysis and question generation intelligence. Because Dev 2 is writing their logic in parallel, we will set up stubs (placeholder services) so you can run and test your workflow immediately without waiting for Dev 2 to finish.
+
+🛠️ Step 3 Code Implementation
+1. Create Dev 2 Stubs (Mock Services)
+Create these simple mock files in backend/app/services/ so your imports resolve smoothly. When Dev 2 finishes, they will replace the internal code without altering the function signatures.
+
+File: backend/app/services/candidate_service.py
+
+Python
+def analyze_candidate(candidate_data: dict) -> dict:
+    """Mock candidate analysis logic (Dev 2 will replace this)."""
+    return {
+        "start_topic": "Vector Databases Overview",
+        "start_level": "intermediate"
+    }
+File: backend/app/services/question_service.py
+
+Python
+def generate_question(topic: str, level: str) -> str:
+    """Mock question generation logic (Dev 2 will replace this)."""
+    return f"Welcome! Let's start with {topic}. Can you explain the main difference between relational databases and vector databases?"
+2. Create the Interview Orchestrator
+Now create interview_service.py to handle the business logic for managing interview flow steps.
+
+File: backend/app/services/interview_service.py
+
+Python
+from app.services import session_service
+from app.services.candidate_service import analyze_candidate
+from app.services.question_service import generate_question
+
+def start_interview(session_id: str, candidate_data: dict) -> str:
+    """
+    Handles the initialization of an interview session:
+    1. Analyzes candidate data
+    2. Determines initial topic
+    3. Generates first question
+    4. Saves state in memory
+    """
+    # 1. Analyze profile via Dev 2 service
+    analysis = analyze_candidate(candidate_data)
+    topic = analysis.get("start_topic", "General AI Concepts")
+    level = analysis.get("start_level", "intermediate")
+    
+    # 2. Generate initial question via Dev 2 service
+    first_question = generate_question(topic, level)
+    
+    # 3. Create session & initialize state
+    candidate_id = candidate_data.get("member", {}).get("id", "UNKNOWN")
+    session_service.create_session(session_id, candidate_id)
+    
+    # 4. Record question details
+    session_service.update_current_topic(session_id, topic)
+    session_service.increment_question_count(session_id)
+    session_service.update_session_history(session_id, "system", first_question)
+    
+    return first_question
+3. Update Route Handler
+Connect the start_interview logic to the router in backend/app/routes/interview.py.
+
+File: backend/app/routes/interview.py
+
+Python
+from fastapi import APIRouter, HTTPException
+from app.models.schemas import InterviewRequest, InterviewResponse
+from app.services import session_service, interview_service
+
+router = APIRouter()
+
+@router.post("/api/interview", response_model=InterviewResponse)
+async def handle_interview(request: InterviewRequest):
+    session_id = request.sessionId
+
+    # ---------------------------------------------------------
+    # FLOW 1: START INTERVIEW
+    # ---------------------------------------------------------
+    if request.candidate:
+        candidate_data = request.candidate.dict()
+        first_question = interview_service.start_interview(session_id, candidate_data)
+        
+        return InterviewResponse(
+            reply=first_question,
+            done=False
+        )
+
+    # ---------------------------------------------------------
+    # FLOW 2: CONTINUE INTERVIEW (To be completed in Step 4)
+    # ---------------------------------------------------------
+    elif request.message:
+        session = session_service.get_session(session_id)
+        if not session:
+            raise HTTPException(
+                status_code=400, 
+                detail="Session not found. Please start the interview first."
+            )
+        
+        # Save candidate message to context history
+        session_service.update_session_history(session_id, "user", request.message)
+        
+        return InterviewResponse(
+            reply=f"[Step 4 Pending] Recorded message: '{request.message}'",
+            done=False
+        )
+
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid request payload."
+        )
+🧪 Testing & Verification (Checking Step 3)
+Run your server (uvicorn app.main:app --reload) and perform the verification test using cURL or Postman.
+
+Request
+Endpoint: POST [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview)
+
+Body:
+
+JSON
+{
+  "sessionId": "test-session-001",
+  "candidate": {
+    "member": {
+      "id": "CAND-001"
+    }
+  }
+}
+Verification Checklist
+[ ] HTTP Status Code: Returns 200 OK.
+
+[ ] JSON Response Body:
+
+JSON
+{
+  "reply": "Welcome! Let's start with Vector Databases Overview. Can you explain the main difference between relational databases and vector databases?",
+  "done": false
+}
+[ ] In-Memory Session Verification: The session test-session-001 is now stored in memory with question_count: 1 and current_topic: "Vector Databases Overview".
+
+Ready for Step 4?
+
+Yes
+i basically doesnt know the testing and verification ,but i recommend postman
+
+PS D:\abtalks\Ryzen> cd backend                   
+
+PS D:\abtalks\Ryzen\backend> uvicorn app.main:app --reload
+
+Fatal error in launcher: Unable to create process using '"C:\Program Files\Python313\python.exe"  "C:\Users\aibel\AppData\Roaming\Python\Python313\Scripts\uvicorn.exe" app.main:app --reload': The system cannot find the file specified.
+
+Postman is an excellent choice for testing! It will make verifying these API endpoints much easier once the server is running.
+
+Regarding that terminal error: this is a very common Windows Python quirk. The uvicorn.exe launcher is getting confused because it's looking for a specific Python path that either moved or doesn't match your current setup.
+
+Here is the fastest way to fix it and get your server running.
+
+🛠️ The Quick Fix
+Instead of calling uvicorn directly, tell Python to run it as a module. Run this command in your terminal:
+
+PowerShell
+python -m uvicorn app.main:app --reload
+(If python doesn't work, try py -m uvicorn app.main:app --reload)
+
+🔒 Best Practice for Collaborators (Virtual Environments)
+Since you are working on a team project, it is highly recommended to use a Virtual Environment. This isolates your project packages so that your team doesn't run into version conflicts. If you haven't set one up yet, here are the steps to do it in your backend folder:
+
+Create the virtual environment:
+
+PowerShell
+python -m venv .venv
+Activate it:
+
+PowerShell
+.\.venv\Scripts\activate
+(You should see (.venv) appear at the start of your terminal line).
+
+Install your packages:
+
+PowerShell
+pip install fastapi uvicorn pydantic
+Run the server:
+
+PowerShell
+uvicorn app.main:app --reload
+Try running the server with the quick fix first. Once it says Application startup complete., open Postman and send a POST request to [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview) with the JSON body from Step 3 to see your code in action.
+
+: 100% (11/11), done.
+
+Delta compression using up to 16 threads
+
+Compressing objects: 100% (4/4), done.
+
+Writing objects: 100% (6/6), 763 bytes | 381.00 KiB/s, done.
+
+Total 6 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+
+To https://github.com/ajas-km/Ryzen.git
+
+   29df428..d34c3df  backend -> backend
+
+PS D:\abtalks\Ryzen> cd backend                   
+
+PS D:\abtalks\Ryzen\backend> uvicorn app.main:app --reload
+
+Fatal error in launcher: Unable to create process using '"C:\Program Files\Python313\python.exe"  "C:\Users\aibel\AppData\Roaming\Python\Python313\Scripts\uvicorn.exe" app.main:app --reload': The system cannot find the file specified.
+
+
+
+PS D:\abtalks\Ryzen\backend> python -m uvicorn app.main:app --reload
+
+INFO:     Will watch for changes in these directories: ['D:\\abtalks\\Ryzen\\backend']
+
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+INFO:     Started reloader process [6024] using StatReload
+
+INFO:     Started server process [20712]
+
+INFO:     Waiting for application startup.
+
+INFO:     Application startup complete.
+
+
+
+i am pushing into github directly each part of my works,so keep the .env file and keep the Apis safe ,does i done any apis till now
+
+And explain what the next purpose to be done the testing
+
+Awesome job getting the server running! Seeing Application startup complete. means your FastAPI application is live and ready to process requests.
+
+🔒 Keeping Secrets & .env Safe on GitHub
+Since you are pushing code directly to GitHub, you must protect API keys (like OpenAI, Groq, or Gemini keys) from leaking into public/private repositories.
+
+What to do right now:
+Check your .gitignore file: Make sure .gitignore exists in your root folder or backend/ folder and includes:
+
+Plaintext
+.env
+__pycache__/
+*.pyc
+.venv/
+Never hardcode API keys: Always load keys using os.getenv("OPENAI_API_KEY") or python-dotenv.
+
+Push a .env.example file instead: Commit a template file named .env.example with dummy values so your teammates know what environment variables to set locally:
+
+Code snippet
+OPENAI_API_KEY=your_api_key_here
+❓ "Have I built any APIs till now?"
+Yes! You have built the primary endpoint of the entire product:
+
+Endpoint: POST /api/interview
+
+Status: It is alive and capable of:
+
+Receiving candidate startup data (candidate.member.id).
+
+Initializing an in-memory session.
+
+Returning the initial interview question.
+
+🧪 Testing Your Current Work in Postman
+To verify Step 3 before moving forward:
+
+Open Postman.
+
+Create a new request with the following settings:
+
+HTTP Method: POST
+
+URL: [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview)
+
+Headers: Add Key: Content-Type, Value: application/json
+
+Select the Body tab → choose raw → select JSON format.
+
+Paste this JSON payload:
+
+JSON
+{
+  "sessionId": "session-test-01",
+  "candidate": {
+    "member": {
+      "id": "CAND-001"
+    }
+  }
+}
+Click Send.
+
+Expected Response:
+JSON
+{
+  "reply": "Welcome! Let's start with Vector Databases Overview. Can you explain the main difference between relational databases and vector databases?",
+  "done": false
+}
+🎯 What is the Purpose of Step 4 (Continue Flow)?
+Right now, your API can start an interview. Step 4 enables the ongoing back-and-forth conversation.
+
+Purpose of Step 4:
+Receive Candidate Answers: The candidate sends their answer in the message field using the existing sessionId.
+
+Retrieve Context: Your code looks up session-test-01 in memory to retrieve conversation history.
+
+Trigger Intelligence: Call Dev 2's evaluation logic to grade the candidate's answer and generate the next question.
+
+Update Session: Increment the question counter (e.g., Question 2 of 6) and save the new exchange to memory.
+
+Ready for Step 4?
+
+Yes
+.gitignore where to create in app folder right
+
+Actually, no. It is best not to put it inside the app folder.
+
+You should create the .gitignore file in the root directory of your Git repository (which looks like your Ryzen folder, or at the very least, your backend folder).
+
+Here is why: Git reads the .gitignore file from the top down. If you put it inside backend/app/, Git will not know to ignore a .env or .venv file sitting in the backend/ folder.
+
+Here is where it should go in your project structure:
+
+Plaintext
+Ryzen/                  ← Put your .gitignore here (Repository Root)
+│
+├── .gitignore          ← CREATE THIS HERE
+├── .env                ← (Keep this safe, Git will ignore it)
+│
+└── backend/
+    ├── .venv/          ← (Git will ignore this too)
+    └── app/            
+        ├── main.py
+        ├── routes/
+        └── services/
+How to do it quickly:
+Open your terminal (make sure you are in the Ryzen or backend folder) and create the file.
+
+If you are using VS Code, just create a new file named .gitignore at the top level of your project and paste this inside:
+
+Plaintext
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.vscode/
+.idea/
+Once that is saved, Git will automatically stop tracking those files, keeping your API keys and heavy environment folders completely safe from being pushed to GitHub!
+
+Never hardcode API keys: Always load keys using os.getenv("OPENAI_API_KEY") or python-dotenv.
+
+where apply this in my code
+
+Since you are the Control Brain (Backend Developer 1), you don't actually need API keys for your specific tasks. You are just handling the API routing, session memory, and orchestrating the flow.
+
+It is Backend Developer 2 (who is writing the AI logic) who will need to use API keys to connect to LLMs.
+
+However, as the architect of the application, you can set up the infrastructure right now in your main.py file so that when Dev 2 writes their code, the .env file is automatically loaded for them.
+
+Here is how you apply it to your codebase.
+
+1. Install the dotenv package
+In your terminal, make sure python-dotenv is installed:
+
+PowerShell
+pip install python-dotenv
+2. Update app/main.py
+Add the code to load the .env variables right when the server starts. Update your backend/app/main.py to look like this:
+
+Python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+from app.routes import interview
+
+# Load environment variables from the .env file at the root level
+load_dotenv()
+
+app = FastAPI(title="AI Interview Agent API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(interview.router)
+
+@app.get("/")
+def health_check():
+    # Example of how to verify the key loaded (optional, for debugging)
+    api_key_status = "Loaded" if os.getenv("OPENAI_API_KEY") else "Missing"
+    return {
+        "status": "Control Brain is running.",
+        "api_key_status": api_key_status
+    }
+3. How Dev 2 Will Use It Later
+Because you added load_dotenv() in main.py, the .env file is now globally available across the app.
+
+When Dev 2 builds app/services/question_service.py, they will simply do this in their file (you do not need to write this part):
+
+Python
+import os
+
+def generate_question(topic: str, level: str) -> str:
+    # Dev 2 retrieves the key safely like this:
+    api_key = os.getenv("OPENAI_API_KEY")
+    
+    # ... logic to call the LLM using the api_key ...
+there are several things to sort out i doesnt done the testing part could u just analyze my work till now what shoulsd be done what all things need to be keot hidden in this ,how the working of ApI s to be done .what all are the next steps
+
+provide the gitignore .env files or i have to update anything now.explain what are the next procedure is it full ready enough to test
+
+1. Analysis of Your Work So Far
+Your code structure is clean, well-organized, and follows FastAPI best practices:
+
+app/main.py: Configures FastAPI, sets up CORS middleware to prevent frontend blocking, and includes the router.  
+PY
+
+app/models/schemas.py: Strictly matches the API contract required by the Technical Specification.  
+PY
+
+app/services/session_service.py: Correctly implements in-memory state tracking (_sessions_db) for session IDs, candidate IDs, question counts, and conversation logs.  
+PY
+
+app/services/interview_service.py & routes/interview.py: Successfully isolates orchestration logic from route handling.  
+PY
++ 1
+
+Mock Services (candidate_service.py, question_service.py): Properly stubbed so you can build and test your backend controller without waiting for Developer 2.  
+PY
++ 1
+
+2. Security: What Must Be Hidden & Configuration Files
+What to Keep Hidden
+API Keys: Any OpenAI, Anthropic, Gemini, or database credentials must never be hardcoded into .py files or committed to GitHub.
+
+Virtual Environments: Local Python virtual environment files (.venv/) should not be pushed to GitHub.
+
+Cache Files: Python bytecode (__pycache__/) must be excluded.
+
+File 1: .gitignore
+Create this file in your root project folder (Ryzen/ or backend/):
+
+Code snippet
+# Environment variables (SECURITY CRITICAL)
+.env
+*.env
+
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS Settings
+.vscode/
+.idea/
+.DS_Store
+File 2: .env (Local Only — DO NOT COMMIT)
+Create this file inside backend/ for your local machine:
+
+Code snippet
+OPENAI_API_KEY=your_secret_openai_key_here
+PORT=8000
+File 3: .env.example (COMMIT THIS TO GITHUB)
+Create this template file so your teammates know what environment variables are expected:
+
+Code snippet
+OPENAI_API_KEY=your_key_here
+PORT=8000
+Code Update Required in app/main.py
+To make sure .env variables load automatically into memory when the app starts, update app/main.py to include load_dotenv():  
+PY
+
+Python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+from app.routes import interview
+
+# Load environment variables on startup
+load_dotenv()
+
+app = FastAPI(title="AI Interview Agent API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(interview.router)
+
+@app.get("/")
+def health_check():
+    return {"status": "Control Brain is running."}
+3. How the API Request/Response Flow Works
+Here is the exact lifecycle when a client calls POST /api/interview:  
+PY
+
+Plaintext
+[Frontend / Postman]
+        │
+        ▼  (JSON Request)
+┌─────────────────────────────────────────┐
+│ POST /api/interview                     │
+└─────────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────────┐
+│ app/routes/interview.py                 │
+│ Check if payload has 'candidate'        │
+└──────────────────┬──────────────────────┘
+                   │
+         ┌─────────┴─────────┐
+         ▼                   ▼
+    [YES: Start]        [NO: Continue]
+         │                   │
+         ▼                   ▼
+ Calls start_interview()   Checks session history
+ in interview_service.py   Stores user message
+ Generates 1st question    [Step 4 Logic Next]
+ Initializes session dict  
+         │                   │
+         └─────────┬─────────┘
+                   ▼
+┌─────────────────────────────────────────┐
+│ Returns JSON Response                   │
+│ { "reply": "...", "done": false }       │
+└─────────────────────────────────────────┘
+4. Testing Status: Is it ready to test right now?
+YES! Step 3 (Start Interview Flow) is fully ready to test.
+
+How to Test in Postman:
+Start Server:
+
+PowerShell
+python -m uvicorn app.main:app --reload
+Open Postman:
+
+Method: POST
+
+URL: [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview)
+
+Headers: Content-Type: application/json
+
+Request Body (Raw JSON):
+
+JSON
+{
+  "sessionId": "test-session-101",
+  "candidate": {
+    "member": {
+      "id": "CAND-001"
+    }
+  }
+}
+Expected Response:
+
+JSON
+{
+  "reply": "Welcome! Let's start with Vector Databases Overview. Can you explain the main difference between relational databases and vector databases?",
+  "done": false
+}
+5. Next Steps & Implementation Procedure
+Now that Start Interview is complete, proceed to Step 4 (Continue Flow) and Step 5 (End & Feedback Flow).
+
+Step 4 Tasks (Continue Flow):
+Receive candidate answer via request.message.  
+PY
+
+Evaluate answer (via Dev 2 stub).
+
+Increment question_count in session memory.  
+PY
+
+Return next question if question_count < 5.
+
+Step 5 Tasks (End Flow):
+If question_count >= 5 (or 7), trigger generate_feedback(history) via Dev 2 stub.
+
+Return final response with "done": true and structured "feedback" block.  
+PY
+
+PS D:\abtalks\Ryzen> cd backend
+
+PS D:\abtalks\Ryzen\backend> python -m uvicorn app.main:app --reload
+
+INFO:     Will watch for changes in these directories: ['D:\\abtalks\\Ryzen\\backend']
+
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+INFO:     Started reloader process [1524] using StatReload
+
+Process SpawnProcess-1:
+
+Traceback (most recent call last):
+
+  File "D:\Python313\Lib\multiprocessing\process.py", line 313, in _bootstrap
+
+    self.run()
+
+    ~~~~~~~~^^
+
+  File "D:\Python313\Lib\multiprocessing\process.py", line 108, in run
+
+    self._target(*self._args, **self._kwargs)
+
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\_subprocess.py", line 80, in subprocess_started
+
+    target(sockets=sockets)
+
+    ~~~~~~^^^^^^^^^^^^^^^^^
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\server.py", line 75, in run
+
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+
+  File "D:\Python313\Lib\asyncio\runners.py", line 195, in run
+
+    return runner.run(main)
+
+           ~~~~~~~~~~^^^^^^
+
+  File "D:\Python313\Lib\asyncio\runners.py", line 118, in run
+
+    return self._loop.run_until_complete(task)
+
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+
+  File "D:\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+
+    return future.result()
+
+           ~~~~~~~~~~~~~^^
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\server.py", line 79, in serve
+
+    await self._serve(sockets)
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\server.py", line 86, in _serve
+
+    config.load()
+
+    ~~~~~~~~~~~^^
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\config.py", line 441, in load
+
+    self.loaded_app = import_from_string(self.app)
+
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\importer.py", line 22, in import_from_string
+
+    raise exc from None
+
+  File "C:\Users\aibel\AppData\Roaming\Python\Python313\site-packages\uvicorn\importer.py", line 19, in import_from_string
+
+    module = importlib.import_module(module_str)
+
+  File "D:\Python313\Lib\importlib\__init__.py", line 88, in import_module
+
+    return _bootstrap._gcd_import(name[level:], package, level)
+
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+
+  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+
+  File "D:\abtalks\Ryzen\backend\app\main.py", line 3, in <module>
+
+    from dotenv import load_dotenv
+
+ModuleNotFoundError: No module named 'dotenv'
+
+This error happens because Python can't find the dotenv module we added to your main.py file in the last step.
+
+🛠️ How to Fix It
+You just need to install the missing package. Run this command in your terminal:
+
+PowerShell
+pip install python-dotenv
+Once the installation completes, start your server again:
+
+PowerShell
+python -m uvicorn app.main:app --reload
+It should say Application startup complete. and then you can go ahead and test Step 3 in Postman!
+
+Open Postman:
+
+
+
+Method: POST
+
+URL: [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview)
+
+Headers: Content-Type: application/json
+
+i am in the 2nd step i installed the post
+
+begin from this step i doesnt know how to check the working of this
+
+Postman can look a bit overwhelming at first, but it is actually very straightforward once you know where to click. I will walk you through exactly how to send your first request and verify that your backend is working.
+
+Make sure your FastAPI server is currently running in your terminal (Application startup complete.).
+
+🚀 How to Test in Postman (Step-by-Step)
+Step 1: Create a New Request
+
+Open Postman.
+
+Click the "+" button at the top (like opening a new tab in a web browser) or click "New" and select "HTTP Request".
+
+Step 2: Set the Method and URL
+
+On the left side of the URL bar, you will see a dropdown that says GET. Click it and change it to POST.
+
+In the URL box right next to it, paste your local address:
+[http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview)
+
+Step 3: Add the JSON Body (The Payload)
+This is where we send the simulated candidate data to your server.
+
+Right below the URL bar, you will see a row of tabs (Params, Authorization, Headers, Body, etc.). Click on Body.
+
+In the row right below that, select the raw radio button.
+
+On the right side of that same row, click the word Text (a dropdown will appear) and change it to JSON.
+
+Now, a large text box will appear below. Paste this exact code into that box:
+
+JSON
+{
+  "sessionId": "test-session-101",
+  "candidate": {
+    "member": {
+      "id": "CAND-001"
+    }
+  }
+}
+Note: Because you selected "JSON" in the previous step, Postman automatically sets the Content-Type: application/json header for you, so you don't need to do it manually!
+
+Step 4: Send the Request
+
+Click the big blue Send button on the right.
+
+✅ How to Check if it Worked
+Look at the bottom section of Postman (the Response area). If your code is working perfectly, you should see two things:
+
+Status: 200 OK (Green text on the right side).
+
+Body: You should see this exact JSON response from your server:
+
+JSON
+{
+  "reply": "Welcome! Let's start with Vector Databases Overview. Can you explain the main difference between relational databases and vector databases?",
+  "done": false
+}
+Did you receive that response, or did it give you an error?
+
+Microsoft Windows [Version 10.0.26200.8875]
+
+(c) Microsoft Corporation. All rights reserved.
+
+
+
+C:\Users\aibel>D:
+
+
+
+D:\>winget install --id Postman.Postman -e
+
+Found Postman [Postman.Postman] Version 12.22.8
+
+This application is licensed to you by its owner.
+
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+
+Downloading https://dl.pstmn.io/download/version/12.22.8/windows_64
+
+  ██████████████████████████████   167 MB /  167 MB
+
+Successfully verified installer hash
+
+Starting package install...
+
+Successfully installed
+
+
+
+D:\>winget list Postman
+
+Name                Id              Version Source
+
+---------------------------------------------------
+
+Postman x64 12.22.8 Postman.Postman 12.22.8 winget
+
+
+
+D:\>winget search Postman
+
+Name               Id                    Version Match                    Source
+
+--------------------------------------------------------------------------------
+
+Postman            Postman.Postman       12.22.8 ProductCode: postman     winget
+
+Postman (arm64)    Postman.Postman.arm64 12.18.3 ProductCode: postman     winget
+
+EasyPostman        Laker.EasyPostman     6.0.15  Tag: postman             winget
+
+Tiger              TaoufikJabbari.Tiger  0.5.0   Tag: postman             winget
+
+West Wind WebSurge WestWind.WebSurge     3.0.4.0 Tag: postman             winget
+
+Vayu               athrvk.Vayu           0.15.0  Tag: postman             winget
+
+Postman CLI        Postman.Postman.CLI   1.16.0                           winget
+
+Postman Agent      Postman.PostmanAgent  0.4.90                           winget
+
+Bowire             KuestenLogik.Bowire   1.7.0   Tag: postman-alternative winget
+
+Vegha              Vegha.Vegha           1.2.4   Tag: postman-alternative winget
+
+Voiden             VoidenHQ.Voiden       2.2.2   Tag: postman-alternative winget
+
+Prism              Stoplight.Prism       5.15.11 Tag: postman-collection  winget
+
+
+
+D:\>
+
+
+
+
+
+PS D:\abtalks\Ryzen> cd backend
+
+PS D:\abtalks\Ryzen\backend> pip install python-dotenv
+
+Collecting python-dotenv
+
+  Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+
+Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+
+Installing collected packages: python-dotenv
+
+Successfully installed python-dotenv-1.2.2
+
+
+
+[notice] A new release of pip is available: 26.1.1 -> 26.2.1
+
+[notice] To update, run: python.exe -m pip install --upgrade pip
+
+PS D:\abtalks\Ryzen\backend> python.exe -m pip install --upgrade pip
+
+Requirement already satisfied: pip in D:\Python313\Lib\site-packages (26.1.1)
+
+Collecting pip
+
+  Downloading pip-26.2.1-py3-none-any.whl.metadata (4.6 kB)
+
+Downloading pip-26.2.1-py3-none-any.whl (1.8 MB)
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 4.0 MB/s  0:00:00
+
+Installing collected packages: pip
+
+  Attempting uninstall: pip
+
+    Found existing installation: pip 26.1.1
+
+    Uninstalling pip-26.1.1:
+
+      Successfully uninstalled pip-26.1.1
+
+Successfully installed pip-26.1.2
+
+PS D:\abtalks\Ryzen\backend> python -m uvicorn app.main:app --reload
+
+INFO:     Will watch for changes in these directories: ['D:\\abtalks\\Ryzen\\backend']
+
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+INFO:     Started reloader process [37488] using StatReload
+
+INFO:     Started server process [6392]
+
+INFO:     Waiting for application startup.
+
+INFO:     Application startup complete.
+
+
+
+what next
+
+Perfect! Your server is officially running, you have all the required packages installed, and Postman is ready to go on your machine.
+
+Now it is time to fire up Postman and actually test the API you built.
+
+🧪 Immediate Next Step: Test the Start Flow in Postman
+Since you just installed Postman, here is exactly how to run your first test:
+
+Open Postman (you can search for it in your Windows Start menu).
+
+Create a Request: Click the "New" button or the "+" icon to open a new tab.
+
+Configure the Request:
+
+Change the method dropdown from GET to POST.
+
+Paste this URL into the address bar: [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview)
+
+Add the Payload:
+
+Right below the URL, click the Body tab.
+
+Select the raw option.
+
+On the right side of that row, change the format dropdown from Text to JSON.
+
+Paste this exact JSON block into the large text area:
+
+JSON
+{
+  "sessionId": "test-session-101",
+  "candidate": {
+    "member": {
+      "id": "CAND-001"
+    }
+  }
+}
+Send it: Click the blue Send button.
+
+✅ What to Look For
+Scroll down to the Response section at the bottom of Postman. If everything is working correctly, you should see a 200 OK status and this exact JSON output:
+
+JSON
+{
+  "reply": "Welcome! Let's start with Vector Databases Overview. Can you explain the main difference between relational databases and vector databases?",
+  "done": false
+}
+Once this test passes, we will immediately move on to writing the code for Step 4: Continue Flow, where we handle the candidate's answers and generate follow-up questions.
+
+Test Status
+
+Yes
+Ah, you have hit Postman's AI onboarding popup! You don't need the AI to generate this request since we already know exactly what to send.
+
+Here is how to get past this and test your API:
+
+1. Bypass the Popup
+Try clicking anywhere on the dark background outside the box, or press the Esc key on your keyboard.
+
+If that doesn't work, just click the orange "Get started with AI" button, and then immediately look for a way to open a standard new request tab.
+
+2. Open a New Request
+Once you are in the main workspace, look for a "+" icon near the top (it looks like opening a new tab in a web browser). Click that to create a blank request.
+
+3. Set Up the Test
+Now, configure the new tab exactly like this:
+
+Method: Change the dropdown on the left from GET to POST.
+
+URL: Paste [http://127.0.0.1:8000/api/interview](http://127.0.0.1:8000/api/interview) into the address bar.
+
+Body:
+
+Click the Body tab right below the URL.
+
+Select the raw option.
+
+Change the dropdown on the far right of that row from Text to JSON.
+
+Paste this payload into the big text box:
+
+JSON
+{
+  "sessionId": "test-session-101",
+  "candidate": {
+    "member": {
+      "id": "CAND-001"
+    }
+  }
+}
+4. Send and Verify
+Click the blue Send button. Scroll down to the response area at the bottom to verify you get a 200 OK status and the welcome message from your mock logic.
+
+Test Status
