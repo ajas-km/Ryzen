@@ -53,25 +53,25 @@ def generate_question(
     else:
         count = topic_question_count.get(current_topic, 0)
 
-    if evaluation == "good":
-        if count < 2:
-            topic = current_topic
-            level = "hard"
-        else:
-            topic = get_next_topic(priority_topics, topics_covered)
-            level = "hard"
+        if evaluation == "good":
+            if count < 2:
+                topic = current_topic
+                level = "hard"
+            else:
+                topic = get_next_topic(priority_topics, topics_covered)
+                level = "hard"
 
-    elif evaluation == "average":
-        topic = current_topic
-        level = "medium"
-
-    elif evaluation == "poor":
-        if count == 0:
+        elif evaluation == "average":
             topic = current_topic
-            level = "easy"
-        else:
-            topic = get_next_topic(priority_topics, topics_covered)
-            level = "easy"
+            level = "medium"
+
+        elif evaluation == "poor":
+            if count == 0:
+                topic = current_topic
+                level = "easy"
+            else:
+                topic = get_next_topic(priority_topics, topics_covered)
+                level = "easy"
 
     if not topic:
         fallback = weak + strong

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import {
   MessageSquare,
   AlertCircle,
@@ -9,16 +9,36 @@ import {
   PanelLeftOpen,
   Send,
 } from "lucide-react"
-import { CHAT_MESSAGES, type Candidate, type ChatMessage } from "./data"
+import type { Candidate, ChatMessage, BackendCandidate } from "./data"
+import type { FeedbackData } from "./interviewer-app"
 
-export function ChatView({ candidate, onViewReport }: { candidate: Candidate; onViewReport: () => void }) {
+const API_BASE_URL = "http://localhost:8000"
+
+export function ChatView({
+  candidate,
+  sessionId,
+  backendCandidate,
+  onInterviewComplete,
+  onViewReport,
+}: {
+  candidate: Candidate
+  sessionId: string
+  backendCandidate: BackendCandidate
+  onInterviewComplete: (feedback: FeedbackData) => void
+  onViewReport: () => void
+}) {
   const [isSidebarHidden, setIsSidebarHidden] = useState(false)
   const [messageText, setMessageText] = useState("")
-  const [messages, setMessages] = useState<ChatMessage[]>(CHAT_MESSAGES)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isPreparing, setIsPreparing] = useState(false)
-  const [progress, setProgress] = useState(35)
+  const [isComplete, setIsComplete] = useState(false)
+  const [questionCount, setQuestionCount] = useState(0)
+  const [error, setError] = useState<string | null>(null)
   const chatHistoryRef = useRef<HTMLDivElement>(null)
-  const isComplete = progress === 100
+  const hasStarted = useRef(false)
+
+  // Progress: estimate based on question count (max ~90% until done)
+  const progress = isComplete ? 100 : Math.min(90, questionCount * 30 + 10)
 
   useEffect(() => {
     chatHistoryRef.current?.scrollTo({
@@ -27,41 +47,101 @@ export function ChatView({ candidate, onViewReport }: { candidate: Candidate; on
     })
   }, [messages, isPreparing])
 
-  const handleSendMessage = () => {
-    const text = messageText.trim()
+  // Start interview on mount
+  const startInterview = useCallback(async () => {
+    if (hasStarted.current) return
+    hasStarted.current = true
+    setIsPreparing(true)
+    setError(null)
 
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          candidate: backendCandidate,
+        }),
+      })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.detail || `Server error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const time = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date())
+
+      setMessages([{
+        id: Date.now(),
+        sender: "ai",
+        time,
+        text: data.reply,
+      }])
+      setQuestionCount(1)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start interview")
+    } finally {
+      setIsPreparing(false)
+    }
+  }, [sessionId, backendCandidate])
+
+  useEffect(() => {
+    startInterview()
+  }, [startInterview])
+
+  const handleSendMessage = async () => {
+    const text = messageText.trim()
     if (!text || isPreparing || isComplete) return
 
     const messageId = Date.now()
     const time = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date())
-    const nextProgress = Math.min(100, progress + 22)
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      { id: messageId, sender: "user", time, text },
-    ])
+    // Add user message immediately
+    setMessages((prev) => [...prev, { id: messageId, sender: "user", time, text }])
     setMessageText("")
-    setProgress(nextProgress)
     setIsPreparing(true)
+    setError(null)
 
-    window.setTimeout(() => {
-      setMessages((currentMessages) => {
-        const response = nextProgress === 100
-          ? "All interview questions have been completed. Your interview report and feedback are now ready to review."
-          : "Thank you for your response. Could you share a specific example that demonstrates how you handled this situation?"
-
-        return [
-          ...currentMessages,
-          {
-            id: messageId + 1,
-            sender: "ai",
-            time: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
-            text: response,
-          },
-        ]
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          message: text,
+        }),
       })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.detail || `Server error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const aiTime = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date())
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: messageId + 1,
+          sender: "ai",
+          time: aiTime,
+          text: data.reply,
+        },
+      ])
+      setQuestionCount((c) => c + 1)
+
+      // Check if interview is done
+      if (data.done && data.feedback) {
+        setIsComplete(true)
+        onInterviewComplete(data.feedback)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message")
+    } finally {
       setIsPreparing(false)
-    }, 1500)
+    }
   }
 
   return (
@@ -201,6 +281,16 @@ export function ChatView({ candidate, onViewReport }: { candidate: Candidate; on
 
             <div className="border-t border-zinc-800 mb-8" />
 
+            {/* Error Banner */}
+            {error && (
+              <div className="mb-6 p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-sm">
+                <div className="flex items-center gap-2 font-semibold mb-1">
+                  <AlertCircle className="w-4 h-4" /> Connection Error
+                </div>
+                {error}
+              </div>
+            )}
+
             {/* Messages */}
             <div className="space-y-8">
               {messages.map((msg) => (
@@ -274,17 +364,15 @@ export function ChatView({ candidate, onViewReport }: { candidate: Candidate; on
                 <CheckCircle2 className="w-6 h-6 mx-auto mb-2 text-emerald-400" />
                 <p className="font-semibold text-zinc-100">Interview complete</p>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {isPreparing ? "Finalizing your report..." : "Your report and feedback are ready to review."}
+                  Your report and feedback are ready to review.
                 </p>
-                {!isPreparing && (
-                  <button
-                    type="button"
-                    onClick={onViewReport}
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-white"
-                  >
-                    View report &amp; feedback
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={onViewReport}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-white"
+                >
+                  View report &amp; feedback
+                </button>
               </div>
             ) : (
             <form

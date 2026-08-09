@@ -4,16 +4,21 @@ from typing import Dict, Any
 # In-memory database to store active interviews
 _sessions_db: Dict[str, Dict[str, Any]] = {}
 
-def create_session(session_id: str, candidate_id: str) -> Dict[str, Any]:
+def create_session(session_id: str, candidate_id: str, analysis: dict = None, role: str = None) -> Dict[str, Any]:
     """Initializes a new interview session with a random question limit."""
     _sessions_db[session_id] = {
         "session_id": session_id,
         "candidate_id": candidate_id,
         "question_count": 0,
-        # Set to 2 for quick testing! Change to random.randint(8, 14) for production.
-        "target_questions": 2,  
+        "min_questions": 8,
+        "max_questions": 12,
         "conversation_history": [],
-        "current_topic": None
+        "current_topic": None,
+        "analysis": analysis or {},
+        "role": role or "Software Developer",
+        "topics_covered": [],
+        "topic_question_count": {},
+        "interview_qa_log": []
     }
     return _sessions_db[session_id]
 
@@ -38,3 +43,20 @@ def update_session_history(session_id: str, role: str, message: str):
             "role": role,
             "content": message
         })
+
+def add_qa_entry(session_id: str, question: str, answer: str, evaluation: str):
+    """Adds a structured Q&A entry for feedback generation."""
+    if session_id in _sessions_db:
+        _sessions_db[session_id]["interview_qa_log"].append({
+            "question": question,
+            "answer": answer,
+            "evaluation": evaluation
+        })
+
+def track_topic(session_id: str, topic: str):
+    """Tracks topics covered and per-topic question counts."""
+    if session_id in _sessions_db:
+        session = _sessions_db[session_id]
+        if topic not in session["topics_covered"]:
+            session["topics_covered"].append(topic)
+        session["topic_question_count"][topic] = session["topic_question_count"].get(topic, 0) + 1

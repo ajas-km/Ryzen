@@ -2,7 +2,10 @@
 
 import { useState, useMemo } from "react"
 import { Search, Filter, MoreVertical, Calendar, Target, ChevronRight, X } from "lucide-react"
-import { CANDIDATES, type Candidate } from "./data"
+import { getCandidateDisplayList, type Candidate } from "./data"
+
+const CANDIDATES = getCandidateDisplayList()
+
 
 type FilterStatus = "All" | "Qualified" | "In Review" | "Screening"
 

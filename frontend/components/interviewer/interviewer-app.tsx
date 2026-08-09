@@ -7,20 +7,45 @@ import { LandingView } from "./landing-view"
 import { SelectionView } from "./selection-view"
 import { ChatView } from "./chat-view"
 import { ReportView } from "./report-view"
-import type { Candidate, ViewState } from "./data"
+import type { Candidate, ViewState, BackendCandidate } from "./data"
+import { getBackendCandidate } from "./data"
+
+export type FeedbackData = {
+  summary: string
+  strengths: string[]
+  gaps: string[]
+  next: string[]
+}
 
 export function InterviewerApp() {
   const [currentView, setCurrentView] = useState<ViewState>("landing")
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
+  const [sessionId, setSessionId] = useState<string>("")
+  const [backendCandidate, setBackendCandidate] = useState<BackendCandidate | null>(null)
+  const [feedback, setFeedback] = useState<FeedbackData | null>(null)
 
   const handleSelectCandidate = (candidate: Candidate) => {
+    // Generate a unique session ID
+    const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    setSessionId(newSessionId)
     setSelectedCandidate(candidate)
+    // Look up the full backend candidate for API calls
+    const fullCandidate = getBackendCandidate(candidate.id)
+    setBackendCandidate(fullCandidate || null)
+    setFeedback(null)
     setCurrentView("chat")
+  }
+
+  const handleInterviewComplete = (feedbackData: FeedbackData) => {
+    setFeedback(feedbackData)
   }
 
   const handleEndSession = () => {
     setCurrentView("selection")
     setSelectedCandidate(null)
+    setBackendCandidate(null)
+    setSessionId("")
+    setFeedback(null)
   }
 
   return (
@@ -36,12 +61,18 @@ export function InterviewerApp() {
 
         {currentView === "selection" && <SelectionView onSelect={handleSelectCandidate} />}
 
-        {currentView === "chat" && selectedCandidate && (
-          <ChatView candidate={selectedCandidate} onViewReport={() => setCurrentView("summary")} />
+        {currentView === "chat" && selectedCandidate && backendCandidate && (
+          <ChatView
+            candidate={selectedCandidate}
+            sessionId={sessionId}
+            backendCandidate={backendCandidate}
+            onInterviewComplete={handleInterviewComplete}
+            onViewReport={() => setCurrentView("summary")}
+          />
         )}
 
         {currentView === "summary" && selectedCandidate && (
-          <ReportView candidate={selectedCandidate} onBack={handleEndSession} />
+          <ReportView candidate={selectedCandidate} feedback={feedback} onBack={handleEndSession} />
         )}
       </main>
 

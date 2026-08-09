@@ -1,61 +1,160 @@
+import random
 from app.services import session_service
 from app.services.candidate_service import analyze_candidate
-from app.services.question_service import generate_question, generate_next_question
+from app.services.question_service import generate_question
 from app.services.evaluation_service import evaluate_answer
 from app.services.feedback_service import generate_feedback
 
+
+def _get_progress(session: dict) -> dict:
+    """Returns questionCount and totalQuestions for the frontend progress bar."""
+    return {
+        "questionCount": session.get("question_count", 0),
+        "totalQuestions": session.get("max_questions", 12),
+    }
+
+
 def start_interview(session_id: str, candidate_data: dict) -> dict:
     """Handles the initialization of an interview session."""
+    # candidate_data now contains the FULL candidate object (with missions)
     analysis = analyze_candidate(candidate_data)
-    topic = analysis.get("start_topic", "General AI Concepts")
-    level = analysis.get("start_level", "intermediate")
+    role = candidate_data.get("member", {}).get("jobRole", "Software Developer")
     
-    first_question = generate_question(topic, level)
+    # Call generate_question with the correct signature
+    result = generate_question(analysis, role)
+    first_question = result["question"]
+    topic = result["topic"]
     
     candidate_id = candidate_data.get("member", {}).get("id", "UNKNOWN")
-    session_service.create_session(session_id, candidate_id)
+    session_service.create_session(session_id, candidate_id, analysis, role)
     
     session_service.update_current_topic(session_id, topic)
+    session_service.track_topic(session_id, topic)
     session_service.increment_question_count(session_id)
     session_service.update_session_history(session_id, "system", first_question)
     
+    session = session_service.get_session(session_id)
     return {
         "reply": first_question,
-        "done": False
+        "done": False,
+        **_get_progress(session),
     }
 
 def continue_interview(session_id: str, message: str) -> dict:
     """Handles an ongoing interview turn and checks for termination."""
     session = session_service.get_session(session_id)
     
+    # Get the actual last question from conversation history
+    last_question = ""
+    for msg in reversed(session.get("conversation_history", [])):
+        if msg["role"] == "system":
+            last_question = msg["content"]
+            break
+    
     # 1. Evaluate answer
-    last_question = "Previous question context" 
     evaluation = evaluate_answer(last_question, message)
+    
+    # If the answer is nonsense/gibberish, ask to clarify without counting it
+    if evaluation.get("rating") == "invalid":
+        clarify_replies = [
+            "I didn't quite understand your response. Could you clarify your answer?",
+            "That doesn't seem related to the question. Could you try explaining again?",
+            "I'd like to hear a more specific answer. Can you elaborate on your response?",
+        ]
+        reply = random.choice(clarify_replies)
+        session_service.update_session_history(session_id, "system", reply)
+        return {
+            "reply": reply,
+            "done": False,
+            **_get_progress(session),
+        }
+    
     session_service.increment_question_count(session_id)
     
-    # 2. Check if we have reached the target number of questions
-    if session["question_count"] >= session["target_questions"]:
-        # We are done! Generate feedback.
-        history = session.get("conversation_history", [])
-        feedback = generate_feedback(history)
+    # Track Q&A entry in the format feedback_service expects
+    session_service.add_qa_entry(
+        session_id, last_question, message, 
+        evaluation.get("rating", "average")
+    )
+    
+    # 2. Smart termination: min 8 questions, max 12, based on performance
+    should_end = _should_end_interview(session)
+    
+    if should_end:
+        # We are done! Generate feedback from structured Q&A log.
+        qa_log = session.get("interview_qa_log", [])
+        feedback = generate_feedback(qa_log)
         
-        final_reply = f"[{evaluation['score'].upper()}] {evaluation['feedback']} That concludes our technical interview today. Thank you for your time!"
+        final_reply = "That concludes our technical interview today. Thank you for your time!"
         session_service.update_session_history(session_id, "system", final_reply)
         
         return {
             "reply": final_reply,
             "done": True,
-            "feedback": feedback
+            "feedback": feedback,
+            **_get_progress(session),
         }
     
     # 3. Otherwise, continue with the next question
-    history = session.get("conversation_history", [])
-    next_question = generate_next_question(history)
+    result = generate_question(
+        session["analysis"],
+        session["role"],
+        previous_question=last_question,
+        evaluation=evaluation.get("rating"),
+        current_topic=session.get("current_topic"),
+        topics_covered=session.get("topics_covered", []),
+        topic_question_count=session.get("topic_question_count", {})
+    )
+    next_question = result["question"]
+    new_topic = result["topic"]
     
-    reply = f"[{evaluation['score'].upper()}] {evaluation['feedback']} {next_question}"
+    # Update session tracking
+    session_service.update_current_topic(session_id, new_topic)
+    session_service.track_topic(session_id, new_topic)
+    
+    reply = next_question
     session_service.update_session_history(session_id, "system", reply)
     
     return {
         "reply": reply,
-        "done": False
+        "done": False,
+        **_get_progress(session),
     }
+
+
+def _should_end_interview(session: dict) -> bool:
+    """
+    Smart termination logic:
+    - Below 8 questions: NEVER end
+    - At 12 questions: ALWAYS end (hard max)
+    - Between 8-12: check performance
+        - Mostly poor (poor > good) → stop (candidate is struggling)
+        - Mostly good (good > poor) → continue (explore deeper)
+        - Mixed/even → stop at 10
+    """
+    count = session["question_count"]
+    min_q = session.get("min_questions", 8)
+    max_q = session.get("max_questions", 12)
+
+    # Below minimum — always continue
+    if count < min_q:
+        return False
+
+    # Hit maximum — always stop
+    if count >= max_q:
+        return True
+
+    # Between min and max — decide based on performance
+    qa_log = session.get("interview_qa_log", [])
+    good_count = sum(1 for entry in qa_log if entry.get("evaluation") == "good")
+    poor_count = sum(1 for entry in qa_log if entry.get("evaluation") == "poor")
+
+    if poor_count > good_count:
+        # Candidate is weak — no need to continue
+        return True
+    elif good_count > poor_count:
+        # Candidate is strong — keep going to explore deeper
+        return False
+    else:
+        # Mixed performance — stop at 10
+        return count >= 10

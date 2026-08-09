@@ -20,9 +20,13 @@ def evaluate_answer(question: str, answer: str):
 
     Evaluate the answer.
 
+    Rules:
+    - If the answer is meaningless, random text, gibberish, nonsense, or completely unrelated to the question, rate it as "invalid".
+    - Otherwise rate it as "good", "average", or "poor" based on technical accuracy.
+
     Return ONLY valid JSON:
     {{
-        "rating": "good | average | poor",
+        "rating": "good | average | poor | invalid",
         "reason": "short reason"
     }}
     """
