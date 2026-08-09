@@ -18,7 +18,8 @@ def create_session(session_id: str, candidate_id: str, analysis: dict = None, ro
         "role": role or "Software Developer",
         "topics_covered": [],
         "topic_question_count": {},
-        "interview_qa_log": []
+        "interview_qa_log": [],
+        "clarification_count": 0
     }
     return _sessions_db[session_id]
 
@@ -35,6 +36,11 @@ def increment_question_count(session_id: str):
     """Increases the question counter by 1."""
     if session_id in _sessions_db:
         _sessions_db[session_id]["question_count"] += 1
+
+def increment_clarification_count(session_id: str):
+    """Increases the clarification counter by 1."""
+    if session_id in _sessions_db:
+        _sessions_db[session_id]["clarification_count"] = _sessions_db[session_id].get("clarification_count", 0) + 1
 
 def update_session_history(session_id: str, role: str, message: str):
     """Appends a new message (user or system) to the chat history."""

@@ -118,3 +118,24 @@ def generate_question(
         "topic": topic,
         "level": level
     }
+
+
+def rephrase_question(question: str) -> str:
+    """Uses the LLM to simplify or rephrase a question when the candidate asks for clarification."""
+    prompt = f"""
+    You are a technical interviewer. 
+    The candidate asked to clarify or rephrase the following question.
+    Please rewrite it in a simpler, easier to understand way, or explain what you are looking for, without giving away the answer.
+    
+    IMPORTANT RULES:
+    - Return ONLY the rephrased question.
+    - Do NOT include any conversational filler (e.g., do not say "Sure, let me rephrase that" or "Here is a simpler version").
+    
+    Original Question:
+    {question}
+    """
+    response = client.models.generate_content(
+        model="gemini-3.5-flash-lite",
+        contents=prompt
+    )
+    return response.text.strip()

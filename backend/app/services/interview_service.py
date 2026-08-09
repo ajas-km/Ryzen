@@ -44,23 +44,32 @@ def continue_interview(session_id: str, message: str) -> dict:
     """Handles an ongoing interview turn and checks for termination."""
     session = session_service.get_session(session_id)
     
-    # Get the actual last question from conversation history
+    clarify_replies = [
+        "I didn't quite understand your response. Could you clarify your answer?",
+        "That doesn't seem related to the question. Could you try explaining again?",
+        "I'd like to hear a more specific answer. Can you elaborate on your response?",
+    ]
+    
+    # Get the actual last question from conversation history, ignoring clarification prompts
     last_question = ""
     for msg in reversed(session.get("conversation_history", [])):
-        if msg["role"] == "system":
+        if msg["role"] == "system" and msg["content"] not in clarify_replies:
             last_question = msg["content"]
             break
-    
+            
+    # Clean the last question to remove any conversational preambles (e.g. "Sure, let me rephrase that. ")
+    if "Sure, let me rephrase that. " in last_question:
+        last_question = last_question.split("Sure, let me rephrase that. ")[-1]
+    if "That's perfectly fine, let's dive into another topic. " in last_question:
+        last_question = last_question.split("That's perfectly fine, let's dive into another topic. ")[-1]
+    if "No problem, let's focus on another aspect. " in last_question:
+        last_question = last_question.split("No problem, let's focus on another aspect. ")[-1]
+        
     # 1. Evaluate answer
     evaluation = evaluate_answer(last_question, message)
     
     # If the answer is nonsense/gibberish, ask to clarify without counting it
     if evaluation.get("rating") == "invalid":
-        clarify_replies = [
-            "I didn't quite understand your response. Could you clarify your answer?",
-            "That doesn't seem related to the question. Could you try explaining again?",
-            "I'd like to hear a more specific answer. Can you elaborate on your response?",
-        ]
         reply = random.choice(clarify_replies)
         session_service.update_session_history(session_id, "system", reply)
         return {
@@ -68,13 +77,35 @@ def continue_interview(session_id: str, message: str) -> dict:
             "done": False,
             **_get_progress(session),
         }
+        
+    # If the candidate asks to clarify or explain the question
+    clarify_limit_reached = False
+    if evaluation.get("rating") == "clarify":
+        clarify_count = session.get("clarification_count", 0)
+        if clarify_count < 3:
+            session_service.increment_clarification_count(session_id)
+            from app.services.question_service import rephrase_question
+            rephrased = rephrase_question(last_question)
+            reply = f"Sure, let me rephrase that. {rephrased}"
+            session_service.update_session_history(session_id, "system", reply)
+            return {
+                "reply": reply,
+                "done": False,
+                **_get_progress(session),
+            }
+        else:
+            clarify_limit_reached = True
+            
+    # Determine rating logic for "don't know" answers (or max clarifications hit)
+    is_dont_know = evaluation.get("rating") == "dont_know" or clarify_limit_reached
+    eval_rating = "poor" if is_dont_know else evaluation.get("rating", "average")
     
     session_service.increment_question_count(session_id)
     
     # Track Q&A entry in the format feedback_service expects
     session_service.add_qa_entry(
         session_id, last_question, message, 
-        evaluation.get("rating", "average")
+        eval_rating
     )
     
     # 2. Smart termination: min 8 questions, max 12, based on performance
@@ -100,7 +131,7 @@ def continue_interview(session_id: str, message: str) -> dict:
         session["analysis"],
         session["role"],
         previous_question=last_question,
-        evaluation=evaluation.get("rating"),
+        evaluation=eval_rating,
         current_topic=session.get("current_topic"),
         topics_covered=session.get("topics_covered", []),
         topic_question_count=session.get("topic_question_count", {})
@@ -109,10 +140,18 @@ def continue_interview(session_id: str, message: str) -> dict:
     new_topic = result["topic"]
     
     # Update session tracking
+    old_topic = session.get("current_topic")
     session_service.update_current_topic(session_id, new_topic)
     session_service.track_topic(session_id, new_topic)
     
     reply = next_question
+    if is_dont_know:
+        if clarify_limit_reached:
+            reply = f"Since we've clarified a few times already, let's move on. {next_question}"
+        elif new_topic != old_topic:
+            reply = f"That's perfectly fine, let's dive into another topic. {next_question}"
+        else:
+            reply = f"No problem, let's focus on another aspect. {next_question}"
     session_service.update_session_history(session_id, "system", reply)
     
     return {

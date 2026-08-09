@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { AlertCircle, FileText, MessageSquare, CheckCircle2 } from "lucide-react"
 import { Header } from "./header"
 import { LandingView } from "./landing-view"
@@ -24,16 +24,45 @@ export function InterviewerApp() {
   const [backendCandidate, setBackendCandidate] = useState<BackendCandidate | null>(null)
   const [feedback, setFeedback] = useState<FeedbackData | null>(null)
 
+  // Navigate to a view and push browser history
+  const navigateTo = useCallback((view: ViewState, pushHistory = true) => {
+    setCurrentView(view)
+    if (pushHistory) {
+      window.history.pushState({ view }, "", `#${view}`)
+    }
+  }, [])
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    // Set initial history state
+    window.history.replaceState({ view: "landing" }, "", "#landing")
+
+    const handlePopState = (event: PopStateEvent) => {
+      const view = event.state?.view as ViewState | undefined
+      if (view) {
+        // If going back from chat/summary, reset session state
+        if ((view === "landing" || view === "selection") && (currentView === "chat" || currentView === "summary")) {
+          setSelectedCandidate(null)
+          setBackendCandidate(null)
+          setSessionId("")
+          setFeedback(null)
+        }
+        setCurrentView(view)
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [currentView])
+
   const handleSelectCandidate = (candidate: Candidate) => {
-    // Generate a unique session ID
     const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
     setSessionId(newSessionId)
     setSelectedCandidate(candidate)
-    // Look up the full backend candidate for API calls
     const fullCandidate = getBackendCandidate(candidate.id)
     setBackendCandidate(fullCandidate || null)
     setFeedback(null)
-    setCurrentView("chat")
+    navigateTo("chat")
   }
 
   const handleInterviewComplete = (feedbackData: FeedbackData) => {
@@ -41,11 +70,11 @@ export function InterviewerApp() {
   }
 
   const handleEndSession = () => {
-    setCurrentView("selection")
     setSelectedCandidate(null)
     setBackendCandidate(null)
     setSessionId("")
     setFeedback(null)
+    navigateTo("selection")
   }
 
   return (
@@ -57,7 +86,7 @@ export function InterviewerApp() {
       {currentView === "selection" && <Header />}
 
       <main className="flex-1 min-h-0 flex flex-col relative w-full">
-        {currentView === "landing" && <LandingView onStart={() => setCurrentView("selection")} />}
+        {currentView === "landing" && <LandingView onStart={() => navigateTo("selection")} />}
 
         {currentView === "selection" && <SelectionView onSelect={handleSelectCandidate} />}
 
@@ -67,7 +96,7 @@ export function InterviewerApp() {
             sessionId={sessionId}
             backendCandidate={backendCandidate}
             onInterviewComplete={handleInterviewComplete}
-            onViewReport={() => setCurrentView("summary")}
+            onViewReport={() => navigateTo("summary")}
           />
         )}
 

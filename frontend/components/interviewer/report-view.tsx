@@ -34,7 +34,7 @@ export function ReportView({
         <button
           type="button"
           onClick={onBack}
-          className="mb-7 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-100"
+          className="mb-7 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-100 print:hidden"
         >
           <ArrowLeft className="h-4 w-4" /> Back to candidates
         </button>
@@ -68,7 +68,8 @@ export function ReportView({
 
           <button
             type="button"
-            className="mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700"
+            onClick={() => window.print()}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700 print:hidden"
           >
             <FileDown className="h-4 w-4" /> Download report
           </button>
@@ -117,7 +118,7 @@ export function ReportView({
                 <h3 className="font-semibold text-zinc-100">Summary</h3>
                 <p className="mt-1 text-sm text-zinc-500">{summary}</p>
               </div>
-              <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white">
+              <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white print:hidden">
                 <MessageSquare className="h-4 w-4" /> Share feedback
               </button>
             </div>

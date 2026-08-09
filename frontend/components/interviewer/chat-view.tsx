@@ -33,12 +33,13 @@ export function ChatView({
   const [isPreparing, setIsPreparing] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [questionCount, setQuestionCount] = useState(0)
+  const [totalQuestions, setTotalQuestions] = useState(12)
   const [error, setError] = useState<string | null>(null)
   const chatHistoryRef = useRef<HTMLDivElement>(null)
   const hasStarted = useRef(false)
 
-  // Progress: estimate based on question count (max ~90% until done)
-  const progress = isComplete ? 100 : Math.min(90, questionCount * 30 + 10)
+  // Real progress from API data
+  const progress = isComplete ? 100 : totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0
 
   useEffect(() => {
     chatHistoryRef.current?.scrollTo({
@@ -72,13 +73,15 @@ export function ChatView({
       const data = await response.json()
       const time = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date())
 
+      if (data.totalQuestions) setTotalQuestions(data.totalQuestions)
+      if (data.questionCount != null) setQuestionCount(data.questionCount)
+
       setMessages([{
         id: Date.now(),
         sender: "ai",
         time,
         text: data.reply,
       }])
-      setQuestionCount(1)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start interview")
     } finally {
@@ -130,7 +133,8 @@ export function ChatView({
           text: data.reply,
         },
       ])
-      setQuestionCount((c) => c + 1)
+      if (data.totalQuestions) setTotalQuestions(data.totalQuestions)
+      if (data.questionCount != null) setQuestionCount(data.questionCount)
 
       // Check if interview is done
       if (data.done && data.feedback) {
