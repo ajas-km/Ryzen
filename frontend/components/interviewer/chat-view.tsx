@@ -12,7 +12,7 @@ import {
 import type { Candidate, ChatMessage, BackendCandidate } from "./data"
 import type { FeedbackData } from "./interviewer-app"
 
-const API_BASE_URL = "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export function ChatView({
   candidate,
