@@ -43,3 +43,4 @@ class InterviewResponse(BaseModel):
     feedback: Optional[FeedbackFeedback] = None
     questionCount: Optional[int] = None
     totalQuestions: Optional[int] = None
+    evaluation: Optional[str] = None  # "good" | "average" | "poor" | None

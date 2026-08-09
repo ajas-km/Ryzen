@@ -123,6 +123,7 @@ def continue_interview(session_id: str, message: str) -> dict:
             "reply": final_reply,
             "done": True,
             "feedback": feedback,
+            "evaluation": eval_rating,
             **_get_progress(session),
         }
     
@@ -157,6 +158,7 @@ def continue_interview(session_id: str, message: str) -> dict:
     return {
         "reply": reply,
         "done": False,
+        "evaluation": eval_rating,
         **_get_progress(session),
     }
 
