@@ -42,6 +42,11 @@ def increment_clarification_count(session_id: str):
     if session_id in _sessions_db:
         _sessions_db[session_id]["clarification_count"] = _sessions_db[session_id].get("clarification_count", 0) + 1
 
+def reset_clarification_count(session_id: str):
+    """Resets the clarification counter to 0 (called when a new question is served)."""
+    if session_id in _sessions_db:
+        _sessions_db[session_id]["clarification_count"] = 0
+
 def update_session_history(session_id: str, role: str, message: str):
     """Appends a new message (user or system) to the chat history."""
     if session_id in _sessions_db:

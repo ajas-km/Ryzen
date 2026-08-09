@@ -31,6 +31,7 @@ def start_interview(session_id: str, candidate_data: dict) -> dict:
     session_service.update_current_topic(session_id, topic)
     session_service.track_topic(session_id, topic)
     session_service.increment_question_count(session_id)
+    session_service.reset_clarification_count(session_id)
     session_service.update_session_history(session_id, "system", first_question)
     
     session = session_service.get_session(session_id)
@@ -82,7 +83,7 @@ def continue_interview(session_id: str, message: str) -> dict:
     clarify_limit_reached = False
     if evaluation.get("rating") == "clarify":
         clarify_count = session.get("clarification_count", 0)
-        if clarify_count < 3:
+        if clarify_count < 2:
             session_service.increment_clarification_count(session_id)
             from app.services.question_service import rephrase_question
             rephrased = rephrase_question(last_question)
@@ -144,6 +145,7 @@ def continue_interview(session_id: str, message: str) -> dict:
     old_topic = session.get("current_topic")
     session_service.update_current_topic(session_id, new_topic)
     session_service.track_topic(session_id, new_topic)
+    session_service.reset_clarification_count(session_id)
     
     reply = next_question
     if is_dont_know:
